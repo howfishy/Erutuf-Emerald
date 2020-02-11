@@ -694,6 +694,7 @@ gBattleAnims_Special::
 	.4byte Special_SafariBallThrow
 	.4byte Special_SubstituteToMon
 	.4byte Special_MonToSubstitute
+    .4byte Special_CriticalCaptureBallThrow
 
 Move_ROOST:
 	loadspritegfx ANIM_TAG_WHITE_FEATHER
@@ -14909,3 +14910,13 @@ Special_SubstituteToMon:
 Special_MonToSubstitute:
 	createvisualtask sub_8172BF0, 2, 0
 	end
+    
+Special_CriticalCaptureBallThrow:
+	createvisualtask sub_8170CFC, 2
+	delay 0
+	playsewithpan SE_RU_HYUU, 0
+	createvisualtask sub_8170E04, 2
+	createvisualtask AnimTask_IsBallBlockedByTrainer, 2
+	jumpreteq -1, BallThrowTrainerBlock
+    goto BallThrowEnd
+
