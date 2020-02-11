@@ -210,6 +210,7 @@ struct ContestPokemon
 {
     /*0x00*/ u16 species;
     /*0x02*/ u8 nickname[POKEMON_NAME_LENGTH + 1];
+<<<<<<< HEAD
     /*0x0D*/ u8 trainerName[PLAYER_NAME_LENGTH + 1];
     /*0x15*/ u8 trainerGfxId;
     /*0x18*/ u32 aiChecks;
@@ -220,6 +221,18 @@ struct ContestPokemon
     u8 aiPool_Smart:1; // 0x20
     u8 aiPool_Tough:1; // 0x40
     /*0x1E*/ u16 moves[MAX_MON_MOVES]; // moves
+=======
+    /*0x0D*/ u8 trainerName[8];
+    /*0x15*/ u16 trainerGfxId;
+    /*0x18*/ u32 flags;
+    /*0x1C*/ u8 whichRank:2;
+    u8 aiPool_Cool:1;
+    u8 aiPool_Beauty:1;
+    u8 aiPool_Cute:1;
+    u8 aiPool_Smart:1;
+    u8 aiPool_Tough:1;
+    /*0x1E*/ u16 moves[4]; // moves
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
     /*0x26*/ u8 cool; // cool
     /*0x27*/ u8 beauty; // beauty
     /*0x28*/ u8 cute; // cute

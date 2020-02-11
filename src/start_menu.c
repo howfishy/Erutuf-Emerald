@@ -62,7 +62,8 @@ enum
     MENU_ACTION_PLAYER_LINK,
     MENU_ACTION_REST_FRONTIER,
     MENU_ACTION_RETIRE_FRONTIER,
-    MENU_ACTION_PYRAMID_BAG
+    MENU_ACTION_PYRAMID_BAG,
+	MENU_ACTION_COSTUME
 };
 
 // Save status
@@ -103,6 +104,7 @@ static bool8 StartMenuSafariZoneRetireCallback(void);
 static bool8 StartMenuLinkModePlayerNameCallback(void);
 static bool8 StartMenuBattlePyramidRetireCallback(void);
 static bool8 StartMenuBattlePyramidBagCallback(void);
+static bool8 StartMenuCostumeCallback(void);
 
 // Menu callbacks
 static bool8 SaveStartCallback(void);
@@ -135,7 +137,15 @@ static void StartMenuTask(u8 taskId);
 static void SaveGameTask(u8 taskId);
 static void sub_80A0550(u8 taskId);
 static void sub_80A08A4(u8 taskId);
+<<<<<<< HEAD
 static bool8 FieldCB_ReturnToFieldStartMenu(void);
+=======
+
+// Some other callback
+static bool8 sub_809FA00(void);
+extern void CB2_CostumeMenu(void);
+const u8 gText_Costume[] = _("Costume");
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 
 static const struct WindowTemplate sSafariBallsWindowTemplate = {0, 1, 1, 9, 4, 0xF, 8};
 
@@ -168,7 +178,8 @@ static const struct MenuAction sStartMenuItems[] =
     {gText_MenuPlayer, {.u8_void = StartMenuLinkModePlayerNameCallback}},
     {gText_MenuRest, {.u8_void = StartMenuSaveCallback}},
     {gText_MenuRetire, {.u8_void = StartMenuBattlePyramidRetireCallback}},
-    {gText_MenuBag, {.u8_void = StartMenuBattlePyramidBagCallback}}
+    {gText_MenuBag, {.u8_void = StartMenuBattlePyramidBagCallback}},
+	{gText_Costume, {.u8_void = StartMenuCostumeCallback}}
 };
 
 static const struct BgTemplate sUnknown_085105A8[] =
@@ -273,6 +284,7 @@ static void AddStartMenuAction(u8 action)
 
 static void BuildNormalStartMenu(void)
 {
+	AddStartMenuAction(MENU_ACTION_COSTUME);
     if (FlagGet(FLAG_SYS_POKEDEX_GET) == TRUE)
     {
         AddStartMenuAction(MENU_ACTION_POKEDEX);
@@ -764,7 +776,20 @@ static bool8 StartMenuBattlePyramidBagCallback(void)
 
     return FALSE;
 }
+static bool8 StartMenuCostumeCallback(void)
+{
+    if (!gPaletteFade.active)
+    {
+        play_some_sound();
+        RemoveExtraStartMenuWindows();
+        overworld_free_bg_tilemaps();
+        SetMainCallback2(CB2_CostumeMenu);
 
+        return TRUE;
+    }
+
+    return FALSE;
+}
 static bool8 SaveStartCallback(void)
 {
     InitSave();

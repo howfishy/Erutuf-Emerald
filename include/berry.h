@@ -1,6 +1,32 @@
 #ifndef GUARD_BERRY_H
 #define GUARD_BERRY_H
 
+enum
+{
+    BERRY_FIRMNESS_UNKNOWN,
+    BERRY_FIRMNESS_VERY_SOFT,
+    BERRY_FIRMNESS_SOFT,
+    BERRY_FIRMNESS_HARD,
+    BERRY_FIRMNESS_VERY_HARD,
+    BERRY_FIRMNESS_SUPER_HARD,
+};
+
+enum
+{
+    FLAVOR_SPICY,
+    FLAVOR_DRY,
+    FLAVOR_SWEET,
+    FLAVOR_BITTER,
+    FLAVOR_SOUR,
+    FLAVOR_COUNT
+};
+
+#define NUM_BERRIES 44
+
+extern const u16 *const gBerryTreeEventObjectGraphicsIdTablePointers[];
+extern const struct SpriteFrameImage *const gBerryTreePicTablePointers[];
+extern const u16 *const gBerryTreePaletteTagTablePointers[];
+
 void ClearEnigmaBerries(void);
 void SetEnigmaBerry(u8 *src);
 bool32 IsEnigmaBerryValid(void);

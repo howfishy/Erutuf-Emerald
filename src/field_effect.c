@@ -35,7 +35,7 @@
 #define subsprite_table(ptr) {.subsprites = ptr, .subspriteCount = (sizeof ptr) / (sizeof(struct Subsprite))}
 
 EWRAM_DATA s32 gFieldEffectArguments[8] = {0};
-
+EWRAM_DATA u16 gReflectionPaletteBuffer[0x10] = {0};
 // Static type declarations
 
 static void Task_PokecenterHeal(u8 taskId);
@@ -3113,10 +3113,19 @@ u8 sub_80B8F98(void)
 
 u8 FldEff_NPCFlyOut(void)
 {
+<<<<<<< HEAD
     u8 spriteId = CreateSprite(gFieldEffectObjectTemplatePointers[26], 0x78, 0, 1);
     struct Sprite *sprite = &gSprites[spriteId];
 
     sprite->oam.paletteNum = 0;
+=======
+    u8 spriteId;
+    struct Sprite *sprite;
+
+    LoadFieldEffectPalette(26);
+    spriteId = CreateSprite(gFieldEffectObjectTemplatePointers[26], 0x78, 0, 1);
+    sprite = &gSprites[spriteId];
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
     sprite->oam.priority = 1;
     sprite->callback = sub_80B9128;
     sprite->data[1] = gFieldEffectArguments[0];
@@ -3286,9 +3295,10 @@ static u8 sub_80B94C4(void)
 {
     u8 spriteId;
     struct Sprite *sprite;
+
+    LoadFieldEffectPalette(26);
     spriteId = CreateSprite(gFieldEffectObjectTemplatePointers[26], 0xff, 0xb4, 0x1);
     sprite = &gSprites[spriteId];
-    sprite->oam.paletteNum = 0;
     sprite->oam.priority = 1;
     sprite->callback = sub_80B957C;
     return spriteId;

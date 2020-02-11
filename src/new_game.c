@@ -52,6 +52,7 @@ extern const u8 EventScript_ResetAllMapFlags[];
 static void ClearFrontierRecord(void);
 static void WarpToTruck(void);
 static void ResetMiniGamesResults(void);
+static void ResetUnlockedCostumes(void);
 
 // EWRAM vars
 EWRAM_DATA bool8 gDifferentSaveFile = FALSE;
@@ -198,6 +199,7 @@ void NewGameInitData(void)
     ScriptContext2_RunNewScript(EventScript_ResetAllMapFlags);
     ResetMiniGamesResults();
     copy_strings_to_sav1();
+<<<<<<< HEAD
     InitLilycoveLady();
     ResetAllApprenticeData();
     ClearRankingHallRecords();
@@ -206,6 +208,17 @@ void NewGameInitData(void)
     WipeTrainerNameRecords();
     ResetTrainerHillResults();
     ResetContestLinkResults();
+=======
+	SetLilycoveLady();
+	ResetAllApprenticeData();
+	sub_81A4B14();
+	sub_8195E10();
+	sub_801AFD8();
+	sub_800E5AC();
+	sub_81D54BC();
+	ResetContestLinkResults();
+    ResetUnlockedCostumes();
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 }
 
 static void ResetMiniGamesResults(void)
@@ -214,4 +227,13 @@ static void ResetMiniGamesResults(void)
     SetBerryPowder(&gSaveBlock2Ptr->berryCrush.berryPowderAmount, 0);
     ResetPokeJumpResults();
     CpuFill16(0, &gSaveBlock2Ptr->berryPick, sizeof(struct BerryPickingResults));
+}
+
+static void ResetUnlockedCostumes(void)
+{
+    u8 i;
+
+    for (i = 0; i < NUMBER_OF_COSTUMES; i++)
+        if (i != gSaveBlock2Ptr->costume)
+            gSaveBlock2Ptr->costumeFlags[i] = FALSE;
 }

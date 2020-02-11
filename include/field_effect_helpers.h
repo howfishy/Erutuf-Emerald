@@ -34,6 +34,10 @@ void UpdateSparkleFieldEffect(struct Sprite*);
 void SetSpriteInvisible(u8 spriteId);
 void ShowWarpArrowSprite(u8 spriteId, u8 direction, s16 x, s16 y);
 void sub_8155604(u8 spriteId, u8 value, s16 data1);
+<<<<<<< HEAD
 void sub_81555D8(u8 spriteId, u8 value);
+=======
+void LoadFieldEffectPalette(u8 fieldEffect);
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 
 #endif //GUARD_FIELD_EFFECT_HELPERS_H

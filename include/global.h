@@ -385,6 +385,7 @@ struct BattleFrontier
     /*0xE22*/ u16 pyramidRandoms[4];
     /*0xE2A*/ u8 pyramidTrainerFlags;
     /*0xE2C*/ struct PyramidBag pyramidBag;
+<<<<<<< HEAD
     /*0xE68*/ u8 pyramidLightRadius;
     /*0xE6A*/ u16 verdanturfTentPrize;
     /*0xE6C*/ u16 fallarborTentPrize;
@@ -411,6 +412,39 @@ struct ApprenticeQuestion
     u8 moveSlot:2;
     u8 suggestedChange:2; // TRUE if told to use held item or second move, FALSE if told to use no item or first move
     u16 data; // used both as an itemId and a moveId
+=======
+    /*0xE58*/ u16 field_E58;
+    /*0xE6A*/ u16 field_E6A;
+    /*0xE6C*/ u16 field_E6C;
+    /*0xE6E*/ u16 field_E6E;
+    /*0xE70*/ struct Struct_field_E70 field_E70[6];
+    /*0xEB8*/ u16 frontierBattlePoints;
+    /*0xEBA*/ u8 field_EBA;
+    /*0xEBB*/ u8 field_EBB;
+    /*0xEBC*/ u8 field_EBC;
+    /*0xEBD*/ u8 field_EBD;
+    /*0xEBE*/ u8 field_EBE;
+    /*0xEBF*/ u8 field_EBF;
+    /*0xEC0*/ u16 field_EC0[16];
+    /*0xEE0*/ u8 field_EE0;
+    /*0xEE1*/ u8 field_EE1[2][PLAYER_NAME_LENGTH + 1];
+    /*0xEF1*/ u8 field_EF1[2][4];
+    /*0xEF9*/ u8 field_EF9;
+    /*0xEFA*/ u8 field_EFA;
+    /*0xEFB*/ u8 field_EFB;
+    /*0xEFC*/ struct FrontierMonData field_EFC[3];
+};
+
+#include "constants/costumes.h"
+
+struct Sav2_B8
+{
+    u8 unk0_0:2;
+    u8 unk0_1:2;
+    u8 unk0_2:2;
+    u8 unk0_3:2;
+    u16 unk2;
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 };
 
 struct PlayersApprentice
@@ -476,7 +510,10 @@ struct SaveBlock2
     /*0x57C*/ struct RankingHall2P hallRecords2P[2][3]; // From record mixing.
     /*0x624*/ u16 contestLinkResults[5][4]; // 4 positions for 5 categories.
     /*0x64C*/ struct BattleFrontier frontier;
-}; // sizeof=0xF2C
+// sizeof=0xF2C
+              u8 costume;
+              u8 costumeFlags[NUMBER_OF_COSTUMES];
+}; 
 
 extern struct SaveBlock2 *gSaveBlock2Ptr;
 

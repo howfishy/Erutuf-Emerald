@@ -71,9 +71,12 @@ void BeginHardwarePaletteFade(u8, u8, u8, u8, u8);
 void BlendPalettes(u32 selectedPalettes, u8 coeff, u16 color);
 void BlendPalettesUnfaded(u32, u8, u16);
 void sub_80A2C44(u32 a1, s8 a2, u8 a3, u8 a4, u16 a5, u8 a6, u8 a7);
+<<<<<<< HEAD
 void TintPalette_GrayScale(u16 *palette, u16 count);
 void TintPalette_GrayScale2(u16 *palette, u16 count);
 void TintPalette_SepiaTone(u16 *palette, u16 count);
+=======
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 void TintPalette_CustomTone(u16 *palette, u16 count, u16 rTone, u16 gTone, u16 bTone);
 
 #endif // GUARD_PALETTE_H

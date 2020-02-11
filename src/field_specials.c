@@ -98,9 +98,15 @@ void SetPlayerGotFirstFans(void);
 u16 GetNumFansOfPlayerInTrainerFanClub(void);
 
 static void RecordCyclingRoadResults(u32, u8);
+<<<<<<< HEAD
 static void LoadLinkPartnerEventObjectSpritePalette(u8 graphicsId, u8 localEventId, u8 paletteNum);
 static void Task_PetalburgGymSlideOpenRoomDoors(u8 taskId);
 static void PetalburgGymSetDoorMetatiles(u8 roomNumber, u16 metatileId);
+=======
+static void LoadLinkPartnerEventObjectSpritePalette(u16 graphicsId, u8 localEventId, u8 paletteNum);
+static void Task_PetalburgGym(u8);
+static void PetalburgGymFunc(u8, u16);
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 static void Task_PCTurnOnEffect(u8);
 static void PCTurnOnEffect_0(struct Task *);
 static void PCTurnOnEffect_1(s16, s8, s8);
@@ -541,7 +547,7 @@ void SpawnLinkPartnerEventObject(void)
     };
     u8 myLinkPlayerNumber;
     u8 playerFacingDirection;
-    u8 linkSpriteId;
+    u16 linkSpriteId;
     u8 i;
 
     myLinkPlayerNumber = GetMultiplayerId();
@@ -582,15 +588,15 @@ void SpawnLinkPartnerEventObject(void)
                     break;
                 case VERSION_EMERALD:
                     if (gLinkPlayers[i].gender == 0)
-                        linkSpriteId = EVENT_OBJ_GFX_RIVAL_BRENDAN_NORMAL;
+                        linkSpriteId = EVENT_OBJ_GFX_BRENDAN;
                     else
-                        linkSpriteId = EVENT_OBJ_GFX_RIVAL_MAY_NORMAL;
+                        linkSpriteId = EVENT_OBJ_GFX_MAY;
                     break;
                 default:
                     if (gLinkPlayers[i].gender == 0)
-                        linkSpriteId = EVENT_OBJ_GFX_RIVAL_BRENDAN_NORMAL;
+                        linkSpriteId = EVENT_OBJ_GFX_BRENDAN;
                     else
-                        linkSpriteId = EVENT_OBJ_GFX_RIVAL_MAY_NORMAL;
+                        linkSpriteId = EVENT_OBJ_GFX_MAY;
                     break;
             }
             SpawnSpecialEventObjectParameterized(linkSpriteId, movementTypes[j], 240 - i, coordOffsets[j][0] + x + 7, coordOffsets[j][1] + y + 7, 0);
@@ -604,15 +610,15 @@ void SpawnLinkPartnerEventObject(void)
     }
 }
 
-static void LoadLinkPartnerEventObjectSpritePalette(u8 graphicsId, u8 localEventId, u8 paletteNum)
+static void LoadLinkPartnerEventObjectSpritePalette(u16 graphicsId, u8 localEventId, u8 paletteNum)
 {
     u8 adjustedPaletteNum;
     // Note: This temp var is necessary; paletteNum += 6 doesn't match.
     adjustedPaletteNum = paletteNum + 6;
     if (graphicsId == EVENT_OBJ_GFX_LINK_RS_BRENDAN ||
         graphicsId == EVENT_OBJ_GFX_LINK_RS_MAY ||
-        graphicsId == EVENT_OBJ_GFX_RIVAL_BRENDAN_NORMAL ||
-        graphicsId == EVENT_OBJ_GFX_RIVAL_MAY_NORMAL)
+        graphicsId == EVENT_OBJ_GFX_BRENDAN ||
+        graphicsId == EVENT_OBJ_GFX_MAY)
     {
         u8 obj = GetEventObjectIdByLocalIdAndMap(localEventId, gSaveBlock1Ptr->location.mapNum, gSaveBlock1Ptr->location.mapGroup);
         if (obj != EVENT_OBJECTS_COUNT)
@@ -629,11 +635,19 @@ static void LoadLinkPartnerEventObjectSpritePalette(u8 graphicsId, u8 localEvent
                 case EVENT_OBJ_GFX_LINK_RS_MAY:
                     LoadPalette(gEventObjectPalette34, 0x100 + (adjustedPaletteNum << 4), 0x20);
                     break;
+<<<<<<< HEAD
                 case EVENT_OBJ_GFX_RIVAL_BRENDAN_NORMAL:
                     LoadPalette(gEventObjectPalette8, 0x100 + (adjustedPaletteNum << 4), 0x20);
                     break;
                 case EVENT_OBJ_GFX_RIVAL_MAY_NORMAL:
                     LoadPalette(gEventObjectPalette17, 0x100 + (adjustedPaletteNum << 4), 0x20);
+=======
+                case EVENT_OBJ_GFX_BRENDAN:
+                    LoadPalette(gEventObjectPalette8, 0x100 + paletteNum * 16, 0x20);
+                    break;
+                case EVENT_OBJ_GFX_MAY:
+                    LoadPalette(gEventObjectPalette17, 0x100 + paletteNum * 16, 0x20);
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
                     break;
             }
         }
@@ -2844,11 +2858,11 @@ void SetBattleTowerLinkPlayerGfx(void)
     {
         if (gLinkPlayers[i].gender == MALE)
         {
-            VarSet(VAR_OBJ_GFX_ID_F - i, EVENT_OBJ_GFX_BRENDAN_NORMAL);
+            VarSet(VAR_OBJ_GFX_ID_F - i, EVENT_OBJ_GFX_BRENDAN);
         }
         else
         {
-            VarSet(VAR_OBJ_GFX_ID_F - i, EVENT_OBJ_GFX_RIVAL_MAY_NORMAL);
+            VarSet(VAR_OBJ_GFX_ID_F - i, EVENT_OBJ_GFX_MAY);
         }
     }
 }
@@ -4366,4 +4380,17 @@ void SetPlayerGotFirstFans(void)
 u8 Script_TryGainNewFanFromCounter(void)
 {
     return TryGainNewFanFromCounter(gSpecialVar_0x8004);
+}
+
+extern void UnlockCostumesByGender(u8 playerGender);
+extern void UnlockCostumeByCostumeId(u8 costumeId);
+
+void UnlockCostume_Special(void)
+{
+    UnlockCostumeByCostumeId(gSpecialVar_0x8004);
+}
+
+void UnlockCostumesByGender_Special(void)
+{
+    UnlockCostumesByGender(gSpecialVar_0x8004);
 }

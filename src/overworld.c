@@ -1835,8 +1835,13 @@ static bool32 map_loading_iteration_3(u8 *state)
     case 3:
         sub_8086AE4();
         sub_80869DC();
+<<<<<<< HEAD
         sub_8086B14();
         SetCameraToTrackGuestPlayer();
+=======
+        sub_8086B14(); //link player
+        sub_8086AAC(); //camera callback for link player
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
         (*state)++;
         break;
     case 4:
@@ -1911,7 +1916,7 @@ static bool32 load_map_stuff(u8 *state, u32 a2)
         break;
     case 3:
         mli4_mapscripts_and_other();
-        sub_8086A80();
+        sub_8086A80(); //track player avatar with camera
         (*state)++;
         break;
     case 4:
@@ -2132,7 +2137,6 @@ static void InitOverworldGraphicsRegisters(void)
     ShowBg(3);
     InitFieldMessageBox();
 }
-
 static void sub_8086988(u32 a1)
 {
     ResetTasks();
@@ -2142,11 +2146,7 @@ static void sub_8086988(u32 a1)
     ResetAllPicSprites();
     ResetCameraUpdateInfo();
     InstallCameraPanAheadCallback();
-    if (!a1)
-        InitEventObjectPalettes(0);
-    else
-        InitEventObjectPalettes(1);
-
+    FreeAllSpritePalettes();
     FieldEffectActiveListClear();
     StartWeather();
     ResumePausedWeather();
@@ -2158,9 +2158,15 @@ static void sub_8086988(u32 a1)
 
 static void sub_80869DC(void)
 {
+<<<<<<< HEAD
     gTotalCameraPixelOffsetX = 0;
     gTotalCameraPixelOffsetY = 0;
     ResetEventObjects();
+=======
+    gUnknown_03005DEC = 0;
+    gUnknown_03005DE8 = 0;
+    sub_808D438();         // clears all event objects
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
     TrySpawnEventObjects(0, 0);
     TryRunOnWarpIntoMapScript();
 }
@@ -2184,7 +2190,7 @@ static void mli4_mapscripts_and_other(void)
 
 static void sub_8086A68(void)
 {
-    sub_808E16C(0, 0);
+    sub_808E16C(0, 0); // Initial load of event_objects?
     RotatingGate_InitPuzzleAndGraphics();
     RunOnReturnToFieldMapScript();
 }

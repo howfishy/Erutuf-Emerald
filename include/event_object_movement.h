@@ -1,6 +1,12 @@
 #ifndef GUARD_FIELD_EVENT_OBJ_H
 #define GUARD_FIELD_EVENT_OBJ_H
 
+<<<<<<< HEAD
+=======
+#define NUM_OBJECT_GRAPHICS_INFO EVENT_OBJ_COUNT // 325
+#define SPRITE_VAR EVENT_OBJ_GFX_BARD_2 // 326
+
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 enum SpinnerRunnerFollowPatterns
 {
     RUNFOLLOW_ANY,
@@ -56,10 +62,13 @@ struct LockedAnimEventObjects
 };
 
 extern const struct SpriteFrameImage gEventObjectPicTable_PechaBerryTree[];
+<<<<<<< HEAD
 extern const struct OamData gEventObjectBaseOam_32x8;
 extern const struct OamData gEventObjectBaseOam_32x32;
 extern const struct SpriteTemplate *const gFieldEffectObjectTemplatePointers[];
 extern const u8 gReflectionEffectPaletteMap[];
+=======
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 
 extern const u8 *const gBerryTreeEventObjectGraphicsIdTablePointers[];
 extern const struct SpriteFrameImage *const gBerryTreePicTablePointers[];
@@ -73,9 +82,13 @@ u8 GetEventObjectIdByXY(s16, s16);
 void SetEventObjectDirection(struct EventObject *, u8);
 u8 GetFirstInactiveEventObjectId(void);
 void RemoveEventObjectByLocalIdAndMap(u8, u8, u8);
+<<<<<<< HEAD
 void LoadPlayerObjectReflectionPalette(u16, u8);
 void LoadSpecialObjectReflectionPalette(u16, u8);
 void TryMoveEventObjectToMapCoords(u8, u8, u8, s16, s16);
+=======
+void sub_808EBA8(u8, u8, u8, s16, s16);
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 void PatchObjectPalette(u16, u8);
 void sub_808E16C(s16, s16);
 void OverrideSecretBaseDecorationSpriteScript(u8 localId, u8 mapNum, u8 mapGroup, u8 decorCat);
@@ -85,17 +98,24 @@ void sub_80930E0(s16 *, s16 *, s16, s16);
 void EventObjectClearHeldMovement(struct EventObject *);
 void EventObjectClearHeldMovementIfActive(struct EventObject *);
 void TrySpawnEventObjects(s16, s16);
+<<<<<<< HEAD
 u8 sprite_new(u8 graphicsId, u8 a1, s16 x, s16 y, u8 z, u8 direction);
 u8 AddPseudoEventObject(u16, void (*)(struct Sprite *), s16 x, s16 y, u8 subpriority);
 u8 TrySpawnEventObject(u8, u8, u8);
 u8 SpawnSpecialEventObjectParameterized(u8 graphicsId, u8 movementBehavior, u8 localId, s16 x, s16 y, u8 z);
+=======
+u8 sprite_new(u16 graphicsId, u8, s16, s16, u8, u8);
+u8 AddPseudoEventObject(u16 graphicsId, void (*)(struct Sprite *), s16, s16, u8);
+u8 show_sprite(u8, u8, u8);
+u8 SpawnSpecialEventObjectParameterized(u16 graphicsId, u8, u8, s16, s16, u8);
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 u8 SpawnSpecialEventObject(struct EventObjectTemplate *);
 void SetSpritePosToMapCoords(s16, s16, s16 *, s16 *);
 void CameraObjectReset1(void);
-void EventObjectSetGraphicsId(struct EventObject *, u8 graphicsId);
+void EventObjectSetGraphicsId(struct EventObject *, u16);
 void EventObjectTurn(struct EventObject *, u8);
 void EventObjectTurnByLocalIdAndMap(u8, u8, u8, u8);
-const struct EventObjectGraphicsInfo *GetEventObjectGraphicsInfo(u8 graphicsId);
+const struct EventObjectGraphicsInfo *GetEventObjectGraphicsInfo(u16 graphicsId);
 void npc_by_local_id_and_map_set_field_1_bit_x20(u8, u8, u8, u8);
 void FreeAndReserveObjectSpritePalettes(void);
 void sub_808E82C(u8, u8, u8, s16, s16);
@@ -104,9 +124,14 @@ void sub_808E78C(u8, u8, u8, u8);
 void sub_808E75C(s16, s16);
 void EventObjectGetLocalIdAndMap(struct EventObject *eventObject, void *localId, void *mapNum, void *mapGroup);
 void ShiftEventObjectCoords(struct EventObject *, s16, s16);
+<<<<<<< HEAD
 void MoveEventObjectToMapCoords(struct EventObject *, s16, s16);
 void TryOverrideEventObjectTemplateCoords(u8, u8, u8);
 void InitEventObjectPalettes(u8 palSlot);
+=======
+void sub_808EB08(struct EventObject *, s16, s16);
+void sub_808F254(u8, u8, u8);
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 void UpdateEventObjectCurrentMovement(struct EventObject *, struct Sprite *, bool8(struct EventObject *, struct Sprite *));
 u8 EventObjectFaceOppositeDirection(struct EventObject *, u8);
 u8 GetOppositeDirection(u8);
@@ -189,14 +214,17 @@ u8 GetMoveDirectionFasterAnimNum(u8);
 u8 GetMoveDirectionFastestAnimNum(u8);
 u8 GetLedgeJumpDirection(s16, s16, u8);
 void CameraObjectSetFollowedObjectId(u8 objectId);
-u16 GetObjectPaletteTag(u8 palSlot);
 void UpdateEventObjectSpriteVisibility(struct Sprite *sprite, bool8 invisible);
 s16 sub_809773C(s16 a1);
 s16 sub_8097728(s16 a1);
 void CameraObjectReset2(void);
+<<<<<<< HEAD
 u8 EventObjectGetBerryTreeId(u8 eventObjectId);
 void sub_8092EF0(u8 mapId, u8 mapNumber, u8 mapGroup);
 bool8 IsBerryTreeSparkling(u8, u8, u8);
+=======
+void sub_808E894(u16 paletteTag);
+>>>>>>> 7f82213934f9a831a5517766e89612e26c45cd97
 
 void MovementType_None(struct Sprite *);
 void MovementType_LookAround(struct Sprite *);
