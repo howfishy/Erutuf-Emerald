@@ -81,8 +81,8 @@
 #define STAT_ACC     6 // Only in battles.
 #define STAT_EVASION 7 // Only in battles.
 
-#define NUM_STATS 6
-#define NUM_BATTLE_STATS 8
+#define NUM_EV_STATS     NUM_STATS - 1 // excludes HP
+#define NUM_BATTLE_STATS NUM_STATS + 2 // includes Accuracy and Evasion
 
 // Shiny odds
 #define SHINY_ODDS 8 // Actual probability is SHINY_ODDS/65536
@@ -204,15 +204,18 @@
 #define MON_FEMALE     0xFE
 #define MON_GENDERLESS 0xFF
 
-#define FRIENDSHIP_EVENT_GROW_LEVEL           0
-#define FRIENDSHIP_EVENT_VITAMIN              1 // unused
-#define FRIENDSHIP_EVENT_BATTLE_ITEM          2 // unused
-#define FRIENDSHIP_EVENT_LEAGUE_BATTLE        3
-#define FRIENDSHIP_EVENT_LEARN_TMHM           4
-#define FRIENDSHIP_EVENT_WALKING              5
-#define FRIENDSHIP_EVENT_FAINT_SMALL          6
-#define FRIENDSHIP_EVENT_FAINT_OUTSIDE_BATTLE 7
-#define FRIENDSHIP_EVENT_FAINT_LARGE          8
+// Constants for AdjustFriendship
+#define FRIENDSHIP_EVENT_GROW_LEVEL       0
+#define FRIENDSHIP_EVENT_VITAMIN          1 // unused, handled by PokemonUseItemEffects
+#define FRIENDSHIP_EVENT_BATTLE_ITEM      2 // unused, handled by PokemonUseItemEffects
+#define FRIENDSHIP_EVENT_LEAGUE_BATTLE    3
+#define FRIENDSHIP_EVENT_LEARN_TMHM       4
+#define FRIENDSHIP_EVENT_WALKING          5
+#define FRIENDSHIP_EVENT_FAINT_SMALL      6
+#define FRIENDSHIP_EVENT_FAINT_FIELD_PSN  7
+#define FRIENDSHIP_EVENT_FAINT_LARGE      8 // If opponent was >= 30 levels higher. See AdjustFriendshipOnBattleFaint
+
+#define MAX_FRIENDSHIP  0xFF
 
 #define STATUS_PRIMARY_NONE      0
 #define STATUS_PRIMARY_POISON    1
@@ -287,10 +290,13 @@
 #define EVO_MAP              0x0019 // Pokémon levels up on specified map
 #define EVO_ITEM_MALE        0x001A // specified item is used on a male Pokémon
 #define EVO_ITEM_FEMALE      0x001B // specified item is used on a female Pokémon
-#define EVO_LEVEL_RAIN       0x001B // Pokémon reaches the specified level while it's raining
-#define EVO_SPECIFIC_MON_IN_PARTY  0x001C // Pokémon levels up with a specified Pokémon in party
-#define EVO_LEVEL_SPECIFIC_MON_TYPE_IN_PARTY  0x001D // Pokémon reaches the specified level with a specified Pokémon in party
+#define EVO_LEVEL_RAIN       0x001C // Pokémon reaches the specified level while it's raining
+#define EVO_SPECIFIC_MON_IN_PARTY  0x001D // Pokémon levels up with a specified Pokémon in party
+#define EVO_LEVEL_SPECIFIC_MON_TYPE_IN_PARTY  0x001E // Pokémon reaches the specified level with a specified Pokémon in party
 
 #define EVOS_PER_MON 8
+
+#define NUM_MALE_LINK_FACILITY_CLASSES   8
+#define NUM_FEMALE_LINK_FACILITY_CLASSES 8
 
 #endif // GUARD_CONSTANTS_POKEMON_H

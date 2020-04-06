@@ -369,7 +369,7 @@ static void Task_RecordMixing_Main(u8 taskId)
             sub_808729C();
             if (gWirelessCommType != 0)
             {
-                CreateTask(sub_80AF2B4, 10);
+                CreateTask(Task_ReturnToFieldRecordMixing, 10);
             }
             ClearDialogWindowAndFrame(0, 1);
             DestroyTask(taskId);
@@ -932,7 +932,7 @@ static void ReceiveGiftItem(u16 *item, u8 which)
             VarSet(VAR_TEMP_1, *item);
             StringCopy(gStringVar1, gLinkPlayers[0].name);
             if (*item == ITEM_EON_TICKET)
-                FlagSet(FLAG_SYS_HAS_EON_TICKET);
+                FlagSet(FLAG_ENABLE_SHIP_SOUTHERN_ISLAND);
         }
         else
         {

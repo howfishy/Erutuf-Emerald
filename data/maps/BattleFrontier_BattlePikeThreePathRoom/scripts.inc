@@ -18,7 +18,7 @@ BattleFrontier_BattlePikeThreePathRoom_OnWarp: @ 825C87D
 
 BattleFrontier_BattlePikeThreePathRoom_EventScript_TurnPlayerNorth:: @ 825C887
 	setvar VAR_TEMP_4, 1
-	turnobject EVENT_OBJ_ID_PLAYER, DIR_NORTH
+	turnobject OBJ_EVENT_ID_PLAYER, DIR_NORTH
 	end
 
 BattleFrontier_BattlePikeThreePathRoom_EventScript_GetChallengeStatus:: @ 825C891
@@ -125,7 +125,7 @@ BattleFrontier_BattlePikeThreePathRoom_EventScript_PauseChallenge:: @ 825C9FD
 	pike_save CHALLENGE_STATUS_PAUSED
 	playse SE_SAVE
 	waitse
-	fadescreen 1
+	fadescreen FADE_TO_BLACK
 	frontier_reset
 	end
 

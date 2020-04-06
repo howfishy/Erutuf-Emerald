@@ -29,7 +29,7 @@
 #include "constants/battle_frontier.h"
 #include "constants/battle_pyramid.h"
 #include "constants/event_objects.h"
-#include "constants/event_object_movement_constants.h"
+#include "constants/event_object_movement.h"
 #include "constants/frontier_util.h"
 #include "constants/items.h"
 #include "constants/layouts.h"
@@ -77,14 +77,14 @@ static void GiveBattlePyramidPrize(void);
 static void SeedPyramidFloor(void);
 static void SetPickupItem(void);
 static void HidePyramidItem(void);
-static void InitPyramidFacilityTrainers(void);
+static void SetPyramidFacilityTrainers(void);
 static void ShowPostBattleHintText(void);
 static void UpdatePyramidWinStreak(void);
 static void GetInBattlePyramid(void);
 static void UpdatePyramidLightRadius(void);
 static void ClearPyramidPartyHeldItems(void);
 static void SetPyramidFloorPalette(void);
-static void sub_81A9828(void);
+static void BattlePyramidStartMenu(void);
 static void RestorePyramidPlayerParty(void);
 static void InitPyramidBagItems(u8 lvlMode);
 static u8 GetPyramidFloorTemplateId(void);
@@ -96,8 +96,8 @@ static void GetPyramidEntranceAndExitSquareIds(u8 *, u8 *);
 static void SetPyramidObjectPositionsUniformly(u8);
 static bool8 SetPyramidObjectPositionsInAndNearSquare(u8, u8);
 static bool8 SetPyramidObjectPositionsNearSquare(u8, u8);
-static bool8 TrySetPyramidEventObjectPositionInSquare(u8 arg0, u8 *floorLayoutOffsets, u8 squareId, u8 eventObjectId);
-static bool8 TrySetPyramidEventObjectPositionAtCoords(bool8 objType, u8 x, u8 y, u8 *floorLayoutOffsets, u8 squareId, u8 eventObjectId);
+static bool8 TrySetPyramidObjectEventPositionInSquare(u8 arg0, u8 *floorLayoutOffsets, u8 squareId, u8 objectEventId);
+static bool8 TrySetPyramidObjectEventPositionAtCoords(bool8 objType, u8 x, u8 y, u8 *floorLayoutOffsets, u8 squareId, u8 objectEventId);
 
 // Const rom data.
 #define ABILITY_RANDOM 2 // For wild mons data.
@@ -525,200 +525,200 @@ static const u8 sTrainerTextGroups[50][2] =
 
 static const u8 *const sExitDirectionHintTexts1[] =
 {
-    BattlePyramid_ExitHintUp_Text1,
-    BattlePyramid_ExitHintLeft_Text1,
-    BattlePyramid_ExitHintRight_Text1,
-    BattlePyramid_ExitHintDown_Text1,
+    BattlePyramid_Text_ExitHintUp1,
+    BattlePyramid_Text_ExitHintLeft1,
+    BattlePyramid_Text_ExitHintRight1,
+    BattlePyramid_Text_ExitHintDown1,
 };
 
 static const u8 *const sRemainingItemsHintTexts1[] =
 {
-    BattlePyramid_ZeroItemsRemaining_Text1,
-    BattlePyramid_OneItemRemaining_Text1,
-    BattlePyramid_TwoItemsRemaining_Text1,
-    BattlePyramid_ThreeItemsRemaining_Text1,
-    BattlePyramid_FourItemsRemaining_Text1,
-    BattlePyramid_FiveItemsRemaining_Text1,
-    BattlePyramid_SixItemsRemaining_Text1,
-    BattlePyramid_SevenItemsRemaining_Text1,
-    BattlePyramid_EightItemsRemaining_Text1,
+    BattlePyramid_Text_ZeroItemsRemaining1,
+    BattlePyramid_Text_OneItemRemaining1,
+    BattlePyramid_Text_TwoItemsRemaining1,
+    BattlePyramid_Text_ThreeItemsRemaining1,
+    BattlePyramid_Text_FourItemsRemaining1,
+    BattlePyramid_Text_FiveItemsRemaining1,
+    BattlePyramid_Text_SixItemsRemaining1,
+    BattlePyramid_Text_SevenItemsRemaining1,
+    BattlePyramid_Text_EightItemsRemaining1,
 };
 
 static const u8 *const sRemainingTrainersHintTexts1[] =
 {
-    BattlePyramid_ZeroTrainersRemaining_Text1,
-    BattlePyramid_OneTrainersRemaining_Text1,
-    BattlePyramid_TwoTrainersRemaining_Text1,
-    BattlePyramid_ThreeTrainersRemaining_Text1,
-    BattlePyramid_FourTrainersRemaining_Text1,
-    BattlePyramid_FiveTrainersRemaining_Text1,
-    BattlePyramid_SixTrainersRemaining_Text1,
-    BattlePyramid_SevenTrainersRemaining_Text1,
+    BattlePyramid_Text_ZeroTrainersRemaining1,
+    BattlePyramid_Text_OneTrainersRemaining1,
+    BattlePyramid_Text_TwoTrainersRemaining1,
+    BattlePyramid_Text_ThreeTrainersRemaining1,
+    BattlePyramid_Text_FourTrainersRemaining1,
+    BattlePyramid_Text_FiveTrainersRemaining1,
+    BattlePyramid_Text_SixTrainersRemaining1,
+    BattlePyramid_Text_SevenTrainersRemaining1,
 };
 
 static const u8 *const sExitDirectionHintTexts2[] =
 {
-    BattlePyramid_ExitHintUp_Text2,
-    BattlePyramid_ExitHintLeft_Text2,
-    BattlePyramid_ExitHintRight_Text2,
-    BattlePyramid_ExitHintDown_Text2,
+    BattlePyramid_Text_ExitHintUp2,
+    BattlePyramid_Text_ExitHintLeft2,
+    BattlePyramid_Text_ExitHintRight2,
+    BattlePyramid_Text_ExitHintDown2,
 };
 
 static const u8 *const sRemainingItemsHintTexts2[] =
 {
-    BattlePyramid_ZeroItemsRemaining_Text2,
-    BattlePyramid_OneItemRemaining_Text2,
-    BattlePyramid_TwoItemsRemaining_Text2,
-    BattlePyramid_ThreeItemsRemaining_Text2,
-    BattlePyramid_FourItemsRemaining_Text2,
-    BattlePyramid_FiveItemsRemaining_Text2,
-    BattlePyramid_SixItemsRemaining_Text2,
-    BattlePyramid_SevenItemsRemaining_Text2,
-    BattlePyramid_EightItemsRemaining_Text2,
+    BattlePyramid_Text_ZeroItemsRemaining2,
+    BattlePyramid_Text_OneItemRemaining2,
+    BattlePyramid_Text_TwoItemsRemaining2,
+    BattlePyramid_Text_ThreeItemsRemaining2,
+    BattlePyramid_Text_FourItemsRemaining2,
+    BattlePyramid_Text_FiveItemsRemaining2,
+    BattlePyramid_Text_SixItemsRemaining2,
+    BattlePyramid_Text_SevenItemsRemaining2,
+    BattlePyramid_Text_EightItemsRemaining2,
 };
 
 static const u8 *const sRemainingTrainersHintTexts2[] =
 {
-    BattlePyramid_ZeroTrainersRemaining_Text2,
-    BattlePyramid_OneTrainersRemaining_Text2,
-    BattlePyramid_TwoTrainersRemaining_Text2,
-    BattlePyramid_ThreeTrainersRemaining_Text2,
-    BattlePyramid_FourTrainersRemaining_Text2,
-    BattlePyramid_FiveTrainersRemaining_Text2,
-    BattlePyramid_SixTrainersRemaining_Text2,
-    BattlePyramid_SevenTrainersRemaining_Text2,
+    BattlePyramid_Text_ZeroTrainersRemaining2,
+    BattlePyramid_Text_OneTrainersRemaining2,
+    BattlePyramid_Text_TwoTrainersRemaining2,
+    BattlePyramid_Text_ThreeTrainersRemaining2,
+    BattlePyramid_Text_FourTrainersRemaining2,
+    BattlePyramid_Text_FiveTrainersRemaining2,
+    BattlePyramid_Text_SixTrainersRemaining2,
+    BattlePyramid_Text_SevenTrainersRemaining2,
 };
 
 static const u8 *const sExitDirectionHintTexts3[] =
 {
-    BattlePyramid_ExitHintUp_Text3,
-    BattlePyramid_ExitHintLeft_Text3,
-    BattlePyramid_ExitHintRight_Text3,
-    BattlePyramid_ExitHintDown_Text3,
+    BattlePyramid_Text_ExitHintUp3,
+    BattlePyramid_Text_ExitHintLeft3,
+    BattlePyramid_Text_ExitHintRight3,
+    BattlePyramid_Text_ExitHintDown3,
 };
 
 static const u8 *const sRemainingItemsHintTexts3[] =
 {
-    BattlePyramid_ZeroItemsRemaining_Text3,
-    BattlePyramid_OneItemRemaining_Text3,
-    BattlePyramid_TwoItemsRemaining_Text3,
-    BattlePyramid_ThreeItemsRemaining_Text3,
-    BattlePyramid_FourItemsRemaining_Text3,
-    BattlePyramid_FiveItemsRemaining_Text3,
-    BattlePyramid_SixItemsRemaining_Text3,
-    BattlePyramid_SevenItemsRemaining_Text3,
-    BattlePyramid_EightItemsRemaining_Text3,
+    BattlePyramid_Text_ZeroItemsRemaining3,
+    BattlePyramid_Text_OneItemRemaining3,
+    BattlePyramid_Text_TwoItemsRemaining3,
+    BattlePyramid_Text_ThreeItemsRemaining3,
+    BattlePyramid_Text_FourItemsRemaining3,
+    BattlePyramid_Text_FiveItemsRemaining3,
+    BattlePyramid_Text_SixItemsRemaining3,
+    BattlePyramid_Text_SevenItemsRemaining3,
+    BattlePyramid_Text_EightItemsRemaining3,
 };
 
 static const u8 *const sRemainingTrainersHintTexts3[] =
 {
-    BattlePyramid_ZeroTrainersRemaining_Text3,
-    BattlePyramid_OneTrainersRemaining_Text3,
-    BattlePyramid_TwoTrainersRemaining_Text3,
-    BattlePyramid_ThreeTrainersRemaining_Text3,
-    BattlePyramid_FourTrainersRemaining_Text3,
-    BattlePyramid_FiveTrainersRemaining_Text3,
-    BattlePyramid_SixTrainersRemaining_Text3,
-    BattlePyramid_SevenTrainersRemaining_Text3,
+    BattlePyramid_Text_ZeroTrainersRemaining3,
+    BattlePyramid_Text_OneTrainersRemaining3,
+    BattlePyramid_Text_TwoTrainersRemaining3,
+    BattlePyramid_Text_ThreeTrainersRemaining3,
+    BattlePyramid_Text_FourTrainersRemaining3,
+    BattlePyramid_Text_FiveTrainersRemaining3,
+    BattlePyramid_Text_SixTrainersRemaining3,
+    BattlePyramid_Text_SevenTrainersRemaining3,
 };
 
 static const u8 *const sExitDirectionHintTexts4[] =
 {
-    BattlePyramid_ExitHintUp_Text4,
-    BattlePyramid_ExitHintLeft_Text4,
-    BattlePyramid_ExitHintRight_Text4,
-    BattlePyramid_ExitHintDown_Text4,
+    BattlePyramid_Text_ExitHintUp4,
+    BattlePyramid_Text_ExitHintLeft4,
+    BattlePyramid_Text_ExitHintRight4,
+    BattlePyramid_Text_ExitHintDown4,
 };
 
 static const u8 *const sRemainingItemsHintTexts4[] =
 {
-    BattlePyramid_ZeroItemsRemaining_Text4,
-    BattlePyramid_OneItemRemaining_Text4,
-    BattlePyramid_TwoItemsRemaining_Text4,
-    BattlePyramid_ThreeItemsRemaining_Text4,
-    BattlePyramid_FourItemsRemaining_Text4,
-    BattlePyramid_FiveItemsRemaining_Text4,
-    BattlePyramid_SixItemsRemaining_Text4,
-    BattlePyramid_SevenItemsRemaining_Text4,
-    BattlePyramid_EightItemsRemaining_Text4,
+    BattlePyramid_Text_ZeroItemsRemaining4,
+    BattlePyramid_Text_OneItemRemaining4,
+    BattlePyramid_Text_TwoItemsRemaining4,
+    BattlePyramid_Text_ThreeItemsRemaining4,
+    BattlePyramid_Text_FourItemsRemaining4,
+    BattlePyramid_Text_FiveItemsRemaining4,
+    BattlePyramid_Text_SixItemsRemaining4,
+    BattlePyramid_Text_SevenItemsRemaining4,
+    BattlePyramid_Text_EightItemsRemaining4,
 };
 
 static const u8 *const sRemainingTrainersHintTexts4[] =
 {
-    BattlePyramid_ZeroTrainersRemaining_Text4,
-    BattlePyramid_OneTrainersRemaining_Text4,
-    BattlePyramid_TwoTrainersRemaining_Text4,
-    BattlePyramid_ThreeTrainersRemaining_Text4,
-    BattlePyramid_FourTrainersRemaining_Text4,
-    BattlePyramid_FiveTrainersRemaining_Text4,
-    BattlePyramid_SixTrainersRemaining_Text4,
-    BattlePyramid_SevenTrainersRemaining_Text4,
+    BattlePyramid_Text_ZeroTrainersRemaining4,
+    BattlePyramid_Text_OneTrainersRemaining4,
+    BattlePyramid_Text_TwoTrainersRemaining4,
+    BattlePyramid_Text_ThreeTrainersRemaining4,
+    BattlePyramid_Text_FourTrainersRemaining4,
+    BattlePyramid_Text_FiveTrainersRemaining4,
+    BattlePyramid_Text_SixTrainersRemaining4,
+    BattlePyramid_Text_SevenTrainersRemaining4,
 };
 
 static const u8 *const sExitDirectionHintTexts5[] =
 {
-    BattlePyramid_ExitHintUp_Text5,
-    BattlePyramid_ExitHintLeft_Text5,
-    BattlePyramid_ExitHintRight_Text5,
-    BattlePyramid_ExitHintDown_Text5,
+    BattlePyramid_Text_ExitHintUp5,
+    BattlePyramid_Text_ExitHintLeft5,
+    BattlePyramid_Text_ExitHintRight5,
+    BattlePyramid_Text_ExitHintDown5,
 };
 
 static const u8 *const sRemainingItemsHintTexts5[] =
 {
-    BattlePyramid_ZeroItemsRemaining_Text5,
-    BattlePyramid_OneItemRemaining_Text5,
-    BattlePyramid_TwoItemsRemaining_Text5,
-    BattlePyramid_ThreeItemsRemaining_Text5,
-    BattlePyramid_FourItemsRemaining_Text5,
-    BattlePyramid_FiveItemsRemaining_Text5,
-    BattlePyramid_SixItemsRemaining_Text5,
-    BattlePyramid_SevenItemsRemaining_Text5,
-    BattlePyramid_EightItemsRemaining_Text5,
+    BattlePyramid_Text_ZeroItemsRemaining5,
+    BattlePyramid_Text_OneItemRemaining5,
+    BattlePyramid_Text_TwoItemsRemaining5,
+    BattlePyramid_Text_ThreeItemsRemaining5,
+    BattlePyramid_Text_FourItemsRemaining5,
+    BattlePyramid_Text_FiveItemsRemaining5,
+    BattlePyramid_Text_SixItemsRemaining5,
+    BattlePyramid_Text_SevenItemsRemaining5,
+    BattlePyramid_Text_EightItemsRemaining5,
 };
 
 static const u8 *const sRemainingTrainersHintTexts5[] =
 {
-    BattlePyramid_ZeroTrainersRemaining_Text5,
-    BattlePyramid_OneTrainersRemaining_Text5,
-    BattlePyramid_TwoTrainersRemaining_Text5,
-    BattlePyramid_ThreeTrainersRemaining_Text5,
-    BattlePyramid_FourTrainersRemaining_Text5,
-    BattlePyramid_FiveTrainersRemaining_Text5,
-    BattlePyramid_SixTrainersRemaining_Text5,
-    BattlePyramid_SevenTrainersRemaining_Text5,
+    BattlePyramid_Text_ZeroTrainersRemaining5,
+    BattlePyramid_Text_OneTrainersRemaining5,
+    BattlePyramid_Text_TwoTrainersRemaining5,
+    BattlePyramid_Text_ThreeTrainersRemaining5,
+    BattlePyramid_Text_FourTrainersRemaining5,
+    BattlePyramid_Text_FiveTrainersRemaining5,
+    BattlePyramid_Text_SixTrainersRemaining5,
+    BattlePyramid_Text_SevenTrainersRemaining5,
 };
 
 static const u8 *const sExitDirectionHintTexts6[] =
 {
-    BattlePyramid_ExitHintUp_Text6,
-    BattlePyramid_ExitHintLeft_Text6,
-    BattlePyramid_ExitHintRight_Text6,
-    BattlePyramid_ExitHintDown_Text6,
+    BattlePyramid_Text_ExitHintUp6,
+    BattlePyramid_Text_ExitHintLeft6,
+    BattlePyramid_Text_ExitHintRight6,
+    BattlePyramid_Text_ExitHintDown6,
 };
 
 static const u8 *const sRemainingItemsHintTexts6[] =
 {
-    BattlePyramid_ZeroItemsRemaining_Text6,
-    BattlePyramid_OneItemRemaining_Text6,
-    BattlePyramid_TwoItemsRemaining_Text6,
-    BattlePyramid_ThreeItemsRemaining_Text6,
-    BattlePyramid_FourItemsRemaining_Text6,
-    BattlePyramid_FiveItemsRemaining_Text6,
-    BattlePyramid_SixItemsRemaining_Text6,
-    BattlePyramid_SevenItemsRemaining_Text6,
-    BattlePyramid_EightItemsRemaining_Text6,
+    BattlePyramid_Text_ZeroItemsRemaining6,
+    BattlePyramid_Text_OneItemRemaining6,
+    BattlePyramid_Text_TwoItemsRemaining6,
+    BattlePyramid_Text_ThreeItemsRemaining6,
+    BattlePyramid_Text_FourItemsRemaining6,
+    BattlePyramid_Text_FiveItemsRemaining6,
+    BattlePyramid_Text_SixItemsRemaining6,
+    BattlePyramid_Text_SevenItemsRemaining6,
+    BattlePyramid_Text_EightItemsRemaining6,
 };
 
 static const u8 *const sRemainingTrainersHintTexts6[] =
 {
-    BattlePyramid_ZeroTrainersRemaining_Text6,
-    BattlePyramid_OneTrainersRemaining_Text6,
-    BattlePyramid_TwoTrainersRemaining_Text6,
-    BattlePyramid_ThreeTrainersRemaining_Text6,
-    BattlePyramid_FourTrainersRemaining_Text6,
-    BattlePyramid_FiveTrainersRemaining_Text6,
-    BattlePyramid_SixTrainersRemaining_Text6,
-    BattlePyramid_SevenTrainersRemaining_Text6,
+    BattlePyramid_Text_ZeroTrainersRemaining6,
+    BattlePyramid_Text_OneTrainersRemaining6,
+    BattlePyramid_Text_TwoTrainersRemaining6,
+    BattlePyramid_Text_ThreeTrainersRemaining6,
+    BattlePyramid_Text_FourTrainersRemaining6,
+    BattlePyramid_Text_FiveTrainersRemaining6,
+    BattlePyramid_Text_SixTrainersRemaining6,
+    BattlePyramid_Text_SevenTrainersRemaining6,
 };
 
 static const u8 *const *const sPostBattleHintTexts1[] =
@@ -787,24 +787,24 @@ static const u8 sHintTextTypes[] =
 
 static void (* const sBattlePyramidFunctions[])(void) =
 {
-    [BATTLE_PYRAMID_FUNC_INIT] = InitPyramidChallenge,
-    [BATTLE_PYRAMID_FUNC_GET_DATA] = GetBattlePyramidData,
-    [BATTLE_PYRAMID_FUNC_SET_DATA] = SetBattlePyramidData,
-    [BATTLE_PYRAMID_FUNC_SAVE] = SavePyramidChallenge,
-    [BATTLE_PYRAMID_FUNC_SET_PRIZE] = SetBattlePyramidPrize,
-    [BATTLE_PYRAMID_FUNC_GIVE_PRIZE] = GiveBattlePyramidPrize,
-    [BATTLE_PYRAMID_FUNC_SEED_FLOOR] = SeedPyramidFloor,
-    [BATTLE_PYRAMID_FUNC_SET_ITEM] = SetPickupItem,
-    [BATTLE_PYRAMID_FUNC_HIDE_ITEM] = HidePyramidItem,
-    [BATTLE_PYRAMID_FUNC_INIT_TRAINERS] = InitPyramidFacilityTrainers,
-    [BATTLE_PYRAMID_FUNC_SHOW_HINT_TEXT] = ShowPostBattleHintText,
-    [BATTLE_PYRAMID_FUNC_UPDATE_STREAK] = UpdatePyramidWinStreak,
-    [BATTLE_PYRAMID_FUNC_IS_IN] = GetInBattlePyramid,
-    [BATTLE_PYRAMID_FUNC_UPDATE_LIGHT] = UpdatePyramidLightRadius,
-    [BATTLE_PYRAMID_FUNC_CLEAR_HELD_ITEMS] = ClearPyramidPartyHeldItems,
+    [BATTLE_PYRAMID_FUNC_INIT]              = InitPyramidChallenge,
+    [BATTLE_PYRAMID_FUNC_GET_DATA]          = GetBattlePyramidData,
+    [BATTLE_PYRAMID_FUNC_SET_DATA]          = SetBattlePyramidData,
+    [BATTLE_PYRAMID_FUNC_SAVE]              = SavePyramidChallenge,
+    [BATTLE_PYRAMID_FUNC_SET_PRIZE]         = SetBattlePyramidPrize,
+    [BATTLE_PYRAMID_FUNC_GIVE_PRIZE]        = GiveBattlePyramidPrize,
+    [BATTLE_PYRAMID_FUNC_SEED_FLOOR]        = SeedPyramidFloor,
+    [BATTLE_PYRAMID_FUNC_SET_ITEM]          = SetPickupItem,
+    [BATTLE_PYRAMID_FUNC_HIDE_ITEM]         = HidePyramidItem,
+    [BATTLE_PYRAMID_FUNC_SET_TRAINERS]      = SetPyramidFacilityTrainers,
+    [BATTLE_PYRAMID_FUNC_SHOW_HINT_TEXT]    = ShowPostBattleHintText,
+    [BATTLE_PYRAMID_FUNC_UPDATE_STREAK]     = UpdatePyramidWinStreak,
+    [BATTLE_PYRAMID_FUNC_IS_IN]             = GetInBattlePyramid,
+    [BATTLE_PYRAMID_FUNC_UPDATE_LIGHT]      = UpdatePyramidLightRadius,
+    [BATTLE_PYRAMID_FUNC_CLEAR_HELD_ITEMS]  = ClearPyramidPartyHeldItems,
     [BATTLE_PYRAMID_FUNC_SET_FLOOR_PALETTE] = SetPyramidFloorPalette,
-    [BATTLE_PYRAMID_FUNC_16] = sub_81A9828,
-    [BATTLE_PYRAMID_FUNC_RESTORE_PARTY] = RestorePyramidPlayerParty,
+    [BATTLE_PYRAMID_FUNC_START_MENU]        = BattlePyramidStartMenu,
+    [BATTLE_PYRAMID_FUNC_RESTORE_PARTY]     = RestorePyramidPlayerParty,
 };
 
 static const u16 sShortStreakRewardItems[] = {ITEM_HP_UP, ITEM_PROTEIN, ITEM_IRON, ITEM_CALCIUM, ITEM_CARBOS, ITEM_ZINC};
@@ -1010,14 +1010,14 @@ static void SetPickupItem(void)
 
 static void HidePyramidItem(void)
 {
-    struct EventObjectTemplate *events = gSaveBlock1Ptr->eventObjectTemplates;
+    struct ObjectEventTemplate *events = gSaveBlock1Ptr->objectEventTemplates;
     int i = 0;
 
     for (;;)
     {
         if (events[i].localId == gSpecialVar_LastTalked)
         {
-            // Rather than using event flags to hide the item event object,
+            // Rather than using event flags to hide the item object event,
             // it moves them far off the map bounds.
             events[i].x = 0x7FFF;
             events[i].y = 0x7FFF;
@@ -1029,7 +1029,7 @@ static void HidePyramidItem(void)
     }
 }
 
-static void InitPyramidFacilityTrainers(void)
+static void SetPyramidFacilityTrainers(void)
 {
     gFacilityTrainers = gBattleFrontierTrainers;
 }
@@ -1041,8 +1041,8 @@ static void ShowPostBattleHintText(void)
     u8 id;
     int textGroup = 0;
     int textIndex = 0;
-    struct EventObjectTemplate *events = gSaveBlock1Ptr->eventObjectTemplates;
-    u16 trainerId = LocalIdToPyramidTrainerId(gEventObjects[gSelectedEventObject].localId);
+    struct ObjectEventTemplate *events = gSaveBlock1Ptr->objectEventTemplates;
+    u16 trainerId = LocalIdToPyramidTrainerId(gObjectEvents[gSelectedObjectEvent].localId);
 
     for (i = 0; i < ARRAY_COUNT(sTrainerTextGroups); i++)
     {
@@ -1053,7 +1053,7 @@ static void ShowPostBattleHintText(void)
         }
     }
 
-    hintType = sHintTextTypes[gEventObjects[gSelectedEventObject].localId - 1];
+    hintType = sHintTextTypes[gObjectEvents[gSelectedObjectEvent].localId - 1];
     i = 0;
     while (!i)
     {
@@ -1064,9 +1064,9 @@ static void ShowPostBattleHintText(void)
             i = 1;
             break;
         case HINT_REMAINING_ITEMS:
-            for (i = 0; i < GetNumBattlePyramidEventObjects(); i++)
+            for (i = 0; i < GetNumBattlePyramidObjectEvents(); i++)
             {
-                if (events[i].graphicsId == EVENT_OBJ_GFX_ITEM_BALL && events[i].x != 0x7FFF && events[i].y != 0x7FFF)
+                if (events[i].graphicsId == OBJ_EVENT_GFX_ITEM_BALL && events[i].x != 0x7FFF && events[i].y != 0x7FFF)
                     textIndex++;
             }
             i = 1;
@@ -1193,9 +1193,10 @@ static void Task_SetPyramidFloorPalette(u8 taskId)
     }
 }
 
-static void sub_81A9828(void)
+// Unused. Handled by BuildStartMenuActions
+static void BattlePyramidStartMenu(void)
 {
-    sub_809FDD4();
+    ShowBattlePyramidStartMenu();
 }
 
 static void RestorePyramidPlayerParty(void)
@@ -1243,8 +1244,8 @@ static u8 GetPostBattleDirectionHintTextIndex(int *hintType, u8 minDistanceForEx
         {
             if ((map[x] & METATILE_ID_MASK) == FLOOR_EXIT_METATILE)
             {
-                x += 7 - gEventObjects[gSelectedEventObject].initialCoords.x;
-                y += 7 - gEventObjects[gSelectedEventObject].initialCoords.y;
+                x += 7 - gObjectEvents[gSelectedObjectEvent].initialCoords.x;
+                y += 7 - gObjectEvents[gSelectedObjectEvent].initialCoords.y;
                 if (x >= minDistanceForExitHint
                  || x <= -minDistanceForExitHint
                  || y >= minDistanceForExitHint
@@ -1311,7 +1312,7 @@ u16 LocalIdToPyramidTrainerId(u8 localId)
 
 bool8 GetBattlePyramidTrainerFlag(u8 eventId)
 {
-    return gSaveBlock2Ptr->frontier.pyramidTrainerFlags & gBitTable[gEventObjects[eventId].localId - 1];
+    return gSaveBlock2Ptr->frontier.pyramidTrainerFlags & gBitTable[gObjectEvents[eventId].localId - 1];
 }
 
 void MarkApproachingPyramidTrainersAsBattled(void)
@@ -1319,7 +1320,7 @@ void MarkApproachingPyramidTrainersAsBattled(void)
     MarkPyramidTrainerAsBattled(gTrainerBattleOpponent_A);
     if (gBattleTypeFlags & BATTLE_TYPE_TWO_OPPONENTS)
     {
-        gSelectedEventObject = GetChosenApproachingTrainerEventObjectId(1);
+        gSelectedObjectEvent = GetChosenApproachingTrainerObjectEventId(1);
         MarkPyramidTrainerAsBattled(gTrainerBattleOpponent_B);
     }
 }
@@ -1334,10 +1335,10 @@ static void MarkPyramidTrainerAsBattled(u16 trainerId)
             gSaveBlock2Ptr->frontier.pyramidTrainerFlags |= gBitTable[i];
     }
 
-    gEventObjects[gSelectedEventObject].movementType = MOVEMENT_TYPE_WANDER_AROUND;
-    gSaveBlock1Ptr->eventObjectTemplates[gSpecialVar_LastTalked - 1].movementType = MOVEMENT_TYPE_WANDER_AROUND;
-    gEventObjects[gSelectedEventObject].initialCoords.x = gEventObjects[gSelectedEventObject].currentCoords.x;
-    gEventObjects[gSelectedEventObject].initialCoords.y = gEventObjects[gSelectedEventObject].currentCoords.y;
+    gObjectEvents[gSelectedObjectEvent].movementType = MOVEMENT_TYPE_WANDER_AROUND;
+    gSaveBlock1Ptr->objectEventTemplates[gSpecialVar_LastTalked - 1].movementType = MOVEMENT_TYPE_WANDER_AROUND;
+    gObjectEvents[gSelectedObjectEvent].initialCoords.x = gObjectEvents[gSelectedObjectEvent].currentCoords.x;
+    gObjectEvents[gSelectedObjectEvent].initialCoords.y = gObjectEvents[gSelectedObjectEvent].currentCoords.y;
 }
 
 void GenerateBattlePyramidWildMon(void)
@@ -1417,7 +1418,7 @@ u8 GetPyramidRunMultiplier(void)
 
 u8 InBattlePyramid(void)
 {
-    if (gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_EMPTY_SQUARE)
+    if (gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_FLOOR)
         return 1;
     else if (gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_TOP)
         return 2;
@@ -1427,11 +1428,11 @@ u8 InBattlePyramid(void)
 
 bool8 InBattlePyramid_(void)
 {
-    return gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_EMPTY_SQUARE
+    return gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_FLOOR
         || gMapHeader.mapLayoutId == LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_TOP;
 }
 
-void sub_81A9E90(void)
+void PausePyramidChallenge(void)
 {
     if (InBattlePyramid())
     {
@@ -1475,12 +1476,13 @@ u8 GetBattlePyramindTrainerEncounterMusicId(u16 trainerId)
     return TRAINER_ENCOUNTER_MUSIC_MALE;
 }
 
-void sub_81A9F80(void)
+// Unused
+static void BattlePyramidRetireChallenge(void)
 {
-    ScriptContext1_SetupScript(BattleFrontier_BattlePyramidEmptySquare_EventScript_252C88);
+    ScriptContext1_SetupScript(BattlePyramid_Retire);
 }
 
-static u16 GetUniqueTrainerId(u8 eventObjectId)
+static u16 GetUniqueTrainerId(u8 objectEventId)
 {
     int i;
     u16 trainerId;
@@ -1491,25 +1493,25 @@ static u16 GetUniqueTrainerId(u8 eventObjectId)
     {
         do
         {
-            trainerId = sub_8162548(challengeNum + 1, battleNum);
-            for (i = 0; i < eventObjectId; i++)
+            trainerId = GetRandomScaledFrontierTrainerId(challengeNum + 1, battleNum);
+            for (i = 0; i < objectEventId; i++)
             {
                 if (gSaveBlock2Ptr->frontier.trainerIds[i] == trainerId)
                     break;
             }
-        } while (i != eventObjectId);
+        } while (i != objectEventId);
     }
     else
     {
         do
         {
-            trainerId = sub_8162548(challengeNum, battleNum);
-            for (i = 0; i < eventObjectId; i++)
+            trainerId = GetRandomScaledFrontierTrainerId(challengeNum, battleNum);
+            for (i = 0; i < objectEventId; i++)
             {
                 if (gSaveBlock2Ptr->frontier.trainerIds[i] == trainerId)
                     break;
             }
-        } while (i != eventObjectId);
+        } while (i != objectEventId);
     }
 
     return trainerId;
@@ -1528,7 +1530,7 @@ void GenerateBattlePyramidFloorLayout(u16 *backupMapData, bool8 setPlayerPositio
     {
         u16 *map;
         int yOffset, xOffset;
-        const struct MapLayout *mapLayout = gMapLayouts[floorLayoutOffsets[i] + LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_EMPTY_SQUARE];
+        const struct MapLayout *mapLayout = gMapLayouts[floorLayoutOffsets[i] + LAYOUT_BATTLE_FRONTIER_BATTLE_PYRAMID_FLOOR];
         const u16 *layoutMap = mapLayout->map;
 
         gBackupMapLayout.map = backupMapData;
@@ -1568,7 +1570,7 @@ void GenerateBattlePyramidFloorLayout(u16 *backupMapData, bool8 setPlayerPositio
     free(floorLayoutOffsets);
 }
 
-void LoadBattlePyramidEventObjectTemplates(void)
+void LoadBattlePyramidObjectEventTemplates(void)
 {
     int i;
     u8 id;
@@ -1579,7 +1581,7 @@ void LoadBattlePyramidEventObjectTemplates(void)
 
     id = GetPyramidFloorTemplateId();
     GetPyramidEntranceAndExitSquareIds(&entranceSquareId, &exitSquareId);
-    CpuFill32(0, gSaveBlock1Ptr->eventObjectTemplates, sizeof(gSaveBlock1Ptr->eventObjectTemplates));
+    CpuFill32(0, gSaveBlock1Ptr->objectEventTemplates, sizeof(gSaveBlock1Ptr->objectEventTemplates));
     for (i = 0; i < 2; i++)
     {
         u8 objectPositionsType;
@@ -1614,14 +1616,14 @@ void LoadBattlePyramidEventObjectTemplates(void)
     }
 }
 
-void LoadBattlePyramidFloorEventObjectScripts(void)
+void LoadBattlePyramidFloorObjectEventScripts(void)
 {
     int i;
-    struct EventObjectTemplate *events = gSaveBlock1Ptr->eventObjectTemplates;
+    struct ObjectEventTemplate *events = gSaveBlock1Ptr->objectEventTemplates;
 
-    for (i = 0; i < EVENT_OBJECT_TEMPLATES_COUNT; i++)
+    for (i = 0; i < OBJECT_EVENT_TEMPLATES_COUNT; i++)
     {
-        if (events[i].graphicsId != EVENT_OBJ_GFX_ITEM_BALL)
+        if (events[i].graphicsId != OBJ_EVENT_GFX_ITEM_BALL)
             events[i].script = BattlePyramid_TrainerBattle;
         else
             events[i].script = BattlePyramid_FindItemBall;
@@ -1691,7 +1693,7 @@ static void SetPyramidObjectPositionsUniformly(u8 objType)
                 }
             } while (!(bits & 2));
 
-        } while (!(bits & 4) && TrySetPyramidEventObjectPositionInSquare(objType, floorLayoutOffsets, squareId, objectStartIndex + i));
+        } while (!(bits & 4) && TrySetPyramidObjectEventPositionInSquare(objType, floorLayoutOffsets, squareId, objectStartIndex + i));
         bits &= 1;
     }
     free(floorLayoutOffsets);
@@ -1724,14 +1726,14 @@ static bool8 SetPyramidObjectPositionsInAndNearSquare(u8 objType, u8 squareId)
     {
         if (r7 == 0)
         {
-            if (TrySetPyramidEventObjectPositionInSquare(objType, floorLayoutOffsets, squareId, objectStartIndex + i))
+            if (TrySetPyramidObjectEventPositionInSquare(objType, floorLayoutOffsets, squareId, objectStartIndex + i))
                 r7 = 1;
             else
                 numPlacedObjects++;
         }
         if (r7 & 1)
         {
-            if (TrySetPyramidEventObjectPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderedIndex], objectStartIndex + i))
+            if (TrySetPyramidObjectEventPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderedIndex], objectStartIndex + i))
             {
                 do
                 {
@@ -1739,7 +1741,7 @@ static bool8 SetPyramidObjectPositionsInAndNearSquare(u8 objType, u8 squareId)
                     if (sBorderedSquareIds[squareId][borderedIndex] == 0xFF || borderedIndex >= 4)
                         borderedIndex = 0;
                     r7 += 2;
-                } while (r7 >> 1 != 4 && TrySetPyramidEventObjectPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderedIndex], objectStartIndex + i));
+                } while (r7 >> 1 != 4 && TrySetPyramidObjectEventPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderedIndex], objectStartIndex + i));
                 numPlacedObjects++;
             }
             else
@@ -1786,7 +1788,7 @@ static bool8 SetPyramidObjectPositionsNearSquare(u8 objType, u8 squareId)
 
     for (i = 0; i < numObjects; i++)
     {
-        if (TrySetPyramidEventObjectPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderOffset], objectStartIndex + i))
+        if (TrySetPyramidObjectEventPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderOffset], objectStartIndex + i))
         {
             do
             {
@@ -1794,7 +1796,7 @@ static bool8 SetPyramidObjectPositionsNearSquare(u8 objType, u8 squareId)
                 if (sBorderedSquareIds[squareId][borderOffset] == 0xFF || borderOffset >= 4)
                     borderOffset = 0;
                 r8++;
-            } while (r8 != 4 && TrySetPyramidEventObjectPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderOffset], objectStartIndex + i));
+            } while (r8 != 4 && TrySetPyramidObjectEventPositionInSquare(objType, floorLayoutOffsets, sBorderedSquareIds[squareId][borderOffset], objectStartIndex + i));
             numPlacedObjects++;
         }
         else
@@ -1813,7 +1815,7 @@ static bool8 SetPyramidObjectPositionsNearSquare(u8 objType, u8 squareId)
     return (numObjects / 2) > numPlacedObjects;
 }
 
-static bool8 TrySetPyramidEventObjectPositionInSquare(u8 objType, u8 *floorLayoutOffsets, u8 squareId, u8 eventObjectId)
+static bool8 TrySetPyramidObjectEventPositionInSquare(u8 objType, u8 *floorLayoutOffsets, u8 squareId, u8 objectEventId)
 {
     int x, y;
 
@@ -1823,7 +1825,7 @@ static bool8 TrySetPyramidEventObjectPositionInSquare(u8 objType, u8 *floorLayou
         {
             for (x = 7; x > -1; x--)
             {
-                if (!TrySetPyramidEventObjectPositionAtCoords(objType, x, y, floorLayoutOffsets, squareId, eventObjectId))
+                if (!TrySetPyramidObjectEventPositionAtCoords(objType, x, y, floorLayoutOffsets, squareId, objectEventId))
                     return FALSE;
             }
         }
@@ -1834,7 +1836,7 @@ static bool8 TrySetPyramidEventObjectPositionInSquare(u8 objType, u8 *floorLayou
         {
             for (x = 0; x < 8; x++)
             {
-                if (!TrySetPyramidEventObjectPositionAtCoords(objType, x, y, floorLayoutOffsets, squareId, eventObjectId))
+                if (!TrySetPyramidObjectEventPositionAtCoords(objType, x, y, floorLayoutOffsets, squareId, objectEventId))
                     return FALSE;
             }
         }
@@ -1843,42 +1845,42 @@ static bool8 TrySetPyramidEventObjectPositionInSquare(u8 objType, u8 *floorLayou
     return TRUE;
 }
 
-static bool8 TrySetPyramidEventObjectPositionAtCoords(u8 objType, u8 x, u8 y, u8 *floorLayoutOffsets, u8 squareId, u8 eventObjectId)
+static bool8 TrySetPyramidObjectEventPositionAtCoords(u8 objType, u8 x, u8 y, u8 *floorLayoutOffsets, u8 squareId, u8 objectEventId)
 {
     int i, j;
     const struct MapHeader *mapHeader;
-    struct EventObjectTemplate *floorEvents = gSaveBlock1Ptr->eventObjectTemplates;
+    struct ObjectEventTemplate *floorEvents = gSaveBlock1Ptr->objectEventTemplates;
 
     mapHeader = Overworld_GetMapHeaderByGroupAndId(MAP_GROUP(BATTLE_PYRAMID_SQUARE01), floorLayoutOffsets[squareId] + MAP_NUM(BATTLE_PYRAMID_SQUARE01));
-    for (i = 0; i < mapHeader->events->eventObjectCount; i++)
+    for (i = 0; i < mapHeader->events->objectEventCount; i++)
     {
-        if (mapHeader->events->eventObjects[i].x != x || mapHeader->events->eventObjects[i].y != y)
+        if (mapHeader->events->objectEvents[i].x != x || mapHeader->events->objectEvents[i].y != y)
             continue;
 
-        if (objType != OBJ_TRAINERS || mapHeader->events->eventObjects[i].graphicsId == EVENT_OBJ_GFX_ITEM_BALL)
+        if (objType != OBJ_TRAINERS || mapHeader->events->objectEvents[i].graphicsId == OBJ_EVENT_GFX_ITEM_BALL)
         {
-            if (objType != OBJ_ITEMS || mapHeader->events->eventObjects[i].graphicsId != EVENT_OBJ_GFX_ITEM_BALL)
+            if (objType != OBJ_ITEMS || mapHeader->events->objectEvents[i].graphicsId != OBJ_EVENT_GFX_ITEM_BALL)
                 continue;
         }
 
         // Ensure an object wasn't previously placed in the exact same position.
-        for (j = 0; j < eventObjectId; j++)
+        for (j = 0; j < objectEventId; j++)
         {
             if (floorEvents[j].x == x + ((squareId % 4) * 8) && floorEvents[j].y == y + ((squareId / 4) * 8))
                 break;
         }
 
-        if (j == eventObjectId)
+        if (j == objectEventId)
         {
-            floorEvents[eventObjectId] = mapHeader->events->eventObjects[i];
-            floorEvents[eventObjectId].x += (squareId % 4) * 8;
-            floorEvents[eventObjectId].y += (squareId / 4) * 8;
-            floorEvents[eventObjectId].localId = eventObjectId + 1;
-            if (floorEvents[eventObjectId].graphicsId != EVENT_OBJ_GFX_ITEM_BALL)
+            floorEvents[objectEventId] = mapHeader->events->objectEvents[i];
+            floorEvents[objectEventId].x += (squareId % 4) * 8;
+            floorEvents[objectEventId].y += (squareId / 4) * 8;
+            floorEvents[objectEventId].localId = objectEventId + 1;
+            if (floorEvents[objectEventId].graphicsId != OBJ_EVENT_GFX_ITEM_BALL)
             {
-                i = GetUniqueTrainerId(eventObjectId);
-                floorEvents[eventObjectId].graphicsId = GetBattleFacilityTrainerGfxId(i);
-                gSaveBlock2Ptr->frontier.trainerIds[eventObjectId] = i;
+                i = GetUniqueTrainerId(objectEventId);
+                floorEvents[objectEventId].graphicsId = GetBattleFacilityTrainerGfxId(i);
+                gSaveBlock2Ptr->frontier.trainerIds[objectEventId] = i;
             }
             return FALSE;
         }
@@ -1919,10 +1921,10 @@ static u8 GetPyramidFloorTemplateId(void)
     return 0;
 }
 
-u8 GetNumBattlePyramidEventObjects(void)
+u8 GetNumBattlePyramidObjectEvents(void)
 {
     u8 i;
-    struct EventObjectTemplate *events = gSaveBlock1Ptr->eventObjectTemplates;
+    struct ObjectEventTemplate *events = gSaveBlock1Ptr->objectEventTemplates;
 
     for (i = 0; i < 16; i++)
     {

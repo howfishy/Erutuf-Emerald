@@ -1,7 +1,7 @@
 CASTFORMGFXDIR := graphics/pokemon/castform
 CHERRIMGFXDIR := graphics/pokemon/cherrim
 TILESETGFXDIR := data/tilesets
-FONTGFXDIR := data/graphics/fonts
+FONTGFXDIR := graphics/fonts
 INTERFACEGFXDIR := graphics/interface
 BTLANMSPRGFXDIR := graphics/battle_anims/sprites
 UNUSEDGFXDIR := graphics/unused
@@ -16,10 +16,10 @@ SLOTMACHINEGFXDIR := graphics/slot_machine
 PKNAVGFXDIR := graphics/pokenav
 PKNAVOPTIONSGFXDIR := graphics/pokenav/options
 PSSGFXDIR := graphics/pokemon_storage
-EVENTOBJGFXDIR := graphics/event_objects
+OBJEVENTGFXDIR := graphics/object_events
 MISCGFXDIR := graphics/misc
 
-types := normal fight flying poison ground rock bug ghost steel mystery fire water grass electric psychic ice dragon dark
+types := normal fight flying poison ground rock bug ghost steel mystery fire water grass electric psychic ice dragon dark fairy
 contest_types := cool beauty cute smart tough
 
 
@@ -662,7 +662,7 @@ $(PSSGFXDIR)/ludicolo.4bpp: $(PSSGFXDIR)/friends_frame2.4bpp $(PSSGFXDIR)/ludico
 $(PSSGFXDIR)/whiscash.4bpp: $(PSSGFXDIR)/friends_frame2.4bpp $(PSSGFXDIR)/whiscash_bg.4bpp
 	@cat $^ >$@
 
-$(EVENTOBJGFXDIR)/pics/effects/unknown_4F6D38/0.4bpp: %.4bpp: %.png
+$(OBJEVENTGFXDIR)/pics/effects/unknown_4F6D38/0.4bpp: %.4bpp: %.png
 	$(GFX) $< $@ -num_tiles 11
 
 $(INTERFACEGFXDIR)/selector_outline.4bpp: %.4bpp: %.png

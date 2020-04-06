@@ -1531,7 +1531,7 @@ static void Task_HandleFrontierMap(u8 taskId)
 static u8 MapNumToFrontierFacilityId(u16 mapNum) // id + 1, zero means not a frontier map number
 {
     if ((mapNum >= MAP_NUM(BATTLE_FRONTIER_BATTLE_TOWER_LOBBY) && mapNum <= MAP_NUM(BATTLE_FRONTIER_BATTLE_TOWER_BATTLE_ROOM))
-        || (mapNum >= MAP_NUM(BATTLE_FRONTIER_BATTLE_TOWER_MULTI_BATTLE_ROOM) && mapNum <= MAP_NUM(BATTLE_FRONTIER_BATTLE_TOWER_BATTLE_ROOM2)))
+        || (mapNum >= MAP_NUM(BATTLE_FRONTIER_BATTLE_TOWER_MULTI_PARTNER_ROOM) && mapNum <= MAP_NUM(BATTLE_FRONTIER_BATTLE_TOWER_MULTI_BATTLE_ROOM)))
         return FRONTIER_FACILITY_TOWER + 1;
     else if (mapNum == MAP_NUM(BATTLE_FRONTIER_BATTLE_DOME_LOBBY)
              || mapNum == MAP_NUM(BATTLE_FRONTIER_BATTLE_DOME_CORRIDOR)
@@ -1558,7 +1558,7 @@ static u8 MapNumToFrontierFacilityId(u16 mapNum) // id + 1, zero means not a fro
              || mapNum == MAP_NUM(BATTLE_FRONTIER_BATTLE_PIKE_ROOM_WILD_MONS))
         return FRONTIER_FACILITY_PIKE + 1;
     else if (mapNum == MAP_NUM(BATTLE_FRONTIER_BATTLE_PYRAMID_LOBBY)
-        || mapNum == MAP_NUM(BATTLE_FRONTIER_BATTLE_PYRAMID_EMPTY_SQUARE)
+        || mapNum == MAP_NUM(BATTLE_FRONTIER_BATTLE_PYRAMID_FLOOR)
         || mapNum == MAP_NUM(BATTLE_FRONTIER_BATTLE_PYRAMID_TOP))
         return FRONTIER_FACILITY_PYRAMID + 1;
     else

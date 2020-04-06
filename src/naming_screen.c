@@ -33,7 +33,6 @@ EWRAM_DATA static struct NamingScreenData *gNamingScreenData = NULL;
 extern u16 gKeyRepeatStartDelay;
 
 // extern text
-extern const u8 gExpandedPlaceholder_Empty[];
 extern const u8 gText_MoveOkBack[];
 extern const u8 gText_YourName[];
 extern const u8 gText_BoxName[];
@@ -1172,7 +1171,7 @@ static void NamingScreen_CreatePlayerIcon(void)
     u8 spriteId;
 
     rivalGfxId = GetRivalAvatarGraphicsIdByStateIdAndGender(0, gNamingScreenData->monSpecies);
-    spriteId = AddPseudoEventObject(rivalGfxId, SpriteCallbackDummy, 0x38, 0x25, 0);
+    spriteId = AddPseudoObjectEvent(rivalGfxId, SpriteCallbackDummy, 0x38, 0x25, 0);
     gSprites[spriteId].oam.priority = 3;
     StartSpriteAnim(&gSprites[spriteId], 4);
 }
@@ -1199,7 +1198,7 @@ static void NamingScreen_CreateWandaDadIcon(void)
 {
     u8 spriteId;
 
-    spriteId = AddPseudoEventObject(EVENT_OBJ_GFX_MAN_1, SpriteCallbackDummy, 0x38, 0x25, 0);
+    spriteId = AddPseudoObjectEvent(OBJ_EVENT_GFX_MAN_1, SpriteCallbackDummy, 0x38, 0x25, 0);
     gSprites[spriteId].oam.priority = 3;
     StartSpriteAnim(&gSprites[spriteId], 4);
 }
@@ -1679,7 +1678,7 @@ static void sub_80E4D10(void)
     for (i = 0; i < maxChars; i++)
     {
         temp[0] = gNamingScreenData->textBuffer[i];
-        temp[1] = gExpandedPlaceholder_Empty[0];
+        temp[1] = gText_ExpandedPlaceholder_Empty[0];
         unk2 = (IsLetter(temp[0]) == TRUE) ? 2 : 0;
 
         AddTextPrinterParameterized(gNamingScreenData->windows[2], 1, temp, i * 8 + unk + unk2, 1, 0xFF, NULL);

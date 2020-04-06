@@ -41,7 +41,7 @@ Route119_WeatherInstitute_2F_EventScript_Grunt3:: @ 826FF96
 	end
 
 Route119_WeatherInstitute_2F_EventScript_Shelly:: @ 826FFAD
-	trainerbattle_single TRAINER_SHELLY_1, Route119_WeatherInstitute_2F_Text_ShellyIntro, Route119_WeatherInstitute_2F_Text_ShellyDefeat, Route119_WeatherInstitute_2F_EventScript_ShellyDefeated
+	trainerbattle_single TRAINER_SHELLY_WEATHER_INSTITUTE, Route119_WeatherInstitute_2F_Text_ShellyIntro, Route119_WeatherInstitute_2F_Text_ShellyDefeat, Route119_WeatherInstitute_2F_EventScript_ShellyDefeated
 	msgbox Route119_WeatherInstitute_2F_Text_ShellyPostBattle, MSGBOX_AUTOCLOSE
 	end
 
@@ -50,7 +50,7 @@ Route119_WeatherInstitute_2F_EventScript_ShellyDefeated:: @ 826FFC8
 	closemessage
 	addobject 7  @ Aqua grunt
 	applymovement 7, Route119_WeatherInstitute_2F_Movement_GruntApproachShelly
-	applymovement EVENT_OBJ_ID_PLAYER, Route119_WeatherInstitute_2F_Movement_ShovePlayerOutOfWay
+	applymovement OBJ_EVENT_ID_PLAYER, Route119_WeatherInstitute_2F_Movement_ShovePlayerOutOfWay
 	waitmovement 0
 	msgbox Route119_WeatherInstitute_2F_Text_TeamMagmaJustPassedBy, MSGBOX_DEFAULT
 	closemessage
@@ -64,7 +64,7 @@ Route119_WeatherInstitute_2F_EventScript_ShellyDefeated:: @ 826FFC8
 	setvar VAR_WEATHER_INSTITUTE_STATE, 1
 	clearflag FLAG_HIDE_WEATHER_INSTITUTE_2F_WORKERS
 	fadedefaultbgm
-	fadescreen 1
+	fadescreen FADE_TO_BLACK
 	setflag FLAG_HIDE_ROUTE_119_TEAM_AQUA
 	setflag FLAG_HIDE_WEATHER_INSTITUTE_2F_AQUA_GRUNT_M
 	removeobject 1
@@ -72,9 +72,9 @@ Route119_WeatherInstitute_2F_EventScript_ShellyDefeated:: @ 826FFC8
 	removeobject 3
 	removeobject 8
 	removeobject 7
-	applymovement EVENT_OBJ_ID_PLAYER, Route119_WeatherInstitute_2F_Movement_PlayerReturnToPosition
+	applymovement OBJ_EVENT_ID_PLAYER, Route119_WeatherInstitute_2F_Movement_PlayerReturnToPosition
 	waitmovement 0
-	fadescreen 0
+	fadescreen FADE_FROM_BLACK
 	applymovement 5, Route119_WeatherInstitute_2F_Movement_ScientistApproachPlayer
 	waitmovement 0
 	copyobjectxytoperm 5
