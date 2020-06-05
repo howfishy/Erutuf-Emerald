@@ -45,6 +45,7 @@
 #include "berry_powder.h"
 #include "mevent.h"
 #include "union_room_chat.h"
+#include "constants/items.h"
 
 extern const u8 EventScript_ResetAllMapFlags[];
 
@@ -128,7 +129,7 @@ static void ClearFrontierRecord(void)
 
 static void WarpToTruck(void)
 {
-    SetWarpDestination(MAP_GROUP(INSIDE_OF_TRUCK), MAP_NUM(INSIDE_OF_TRUCK), -1, -1, -1);
+    SetWarpDestination(MAP_GROUP(PETALBURG_CITY), MAP_NUM(PETALBURG_CITY), -1, -1, -1);
     WarpIntoMap();
 }
 
@@ -206,6 +207,11 @@ void NewGameInitData(void)
     WipeTrainerNameRecords();
     ResetTrainerHillResults();
     ResetContestLinkResults();
+    
+    FlagSet(FLAG_SYS_B_DASH);
+    AddBagItem(ITEM_MACH_BIKE, 1);
+    AddBagItem(ITEM_ACRO_BIKE, 1);
+    gSaveBlock1Ptr->registeredItem = ITEM_ACRO_BIKE;
 }
 
 static void ResetMiniGamesResults(void)
