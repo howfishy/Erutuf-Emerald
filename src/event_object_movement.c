@@ -1156,30 +1156,30 @@ const u8 gRunSlowMovementActions[] = {
 
 // sideways stairs
 const u8 gDiagonalStairLeftSideMovementActions[] = {    //movement actions for stairs on left side of a wall (southwest and northeast)
-    [DIR_NONE] = MOVEMENT_ACTION_WALK_SLOW_DOWN,
-    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_SLOW_DOWN,
-    [DIR_NORTH] = MOVEMENT_ACTION_RUN_UP_SLOW,
+    [DIR_NONE] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_WALK_NORMAL_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT,
 };
 const u8 gDiagonalStairRightSideMovementActions[] = {   //movement actions for stairs on right side of a wall (southeast and northwest)
-    [DIR_NONE] = MOVEMENT_ACTION_WALK_SLOW_DOWN,
-    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_SLOW_DOWN,
-    [DIR_NORTH] = MOVEMENT_ACTION_RUN_UP_SLOW,
+    [DIR_NONE] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_WALK_NORMAL_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT,
 };
 const u8 gDiagonalStairRightSideRunningMovementActions[] = {
-    [DIR_NONE] = MOVEMENT_ACTION_RUN_DOWN_SLOW,
-    [DIR_SOUTH] = MOVEMENT_ACTION_RUN_DOWN_SLOW,
-    [DIR_NORTH] = MOVEMENT_ACTION_RUN_UP_SLOW,
+    [DIR_NONE] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_PLAYER_RUN_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT_RUNNING,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT_RUNNING,
 };
 const u8 gDiagonalStairLeftSideRunningMovementActions[] = {
-    [DIR_NONE] = MOVEMENT_ACTION_RUN_DOWN_SLOW,
-    [DIR_SOUTH] = MOVEMENT_ACTION_RUN_DOWN_SLOW,
-    [DIR_NORTH] = MOVEMENT_ACTION_RUN_UP_SLOW,
+    [DIR_NONE] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_PLAYER_RUN_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT_RUNNING,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT_RUNNING,
 };
@@ -4832,6 +4832,28 @@ static u8 GetCollisionInDirection(struct ObjectEvent *objectEvent, u8 direction)
 u8 GetCollisionAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, u32 dir)
 {
     u8 direction = dir;
+    u8 currentBehavior = MapGridGetMetatileBehaviorAt(objectEvent->currentCoords.x, objectEvent->currentCoords.y);
+    u8 nextBehavior = MapGridGetMetatileBehaviorAt(x, y);
+    
+    //sideways stairs checks
+    if (MetatileBehavior_IsSidewaysStairsLeftSideTop(nextBehavior) && dir == DIR_EAST)
+        return COLLISION_IMPASSABLE;    //moving onto left-side top edge east from regular ground -> nope
+    else if (MetatileBehavior_IsSidewaysStairsRightSideTop(nextBehavior) && dir == DIR_WEST)
+        return COLLISION_IMPASSABLE;    //moving onto left-side top edge east from regular ground -> nope
+    else if (MetatileBehavior_IsSidewaysStairsRightSideBottom(nextBehavior) && (dir == DIR_EAST || dir == DIR_SOUTH))
+        return COLLISION_IMPASSABLE;    //moving into right-side bottom edge from regular ground -> nah
+    else if (MetatileBehavior_IsSidewaysStairsLeftSideBottom(nextBehavior) && (dir == DIR_WEST || dir == DIR_SOUTH))
+        return COLLISION_IMPASSABLE;    //moving onto left-side bottom edge from regular ground -> nah
+    else if ((MetatileBehavior_IsSidewaysStairsLeftSideTop(currentBehavior) || MetatileBehavior_IsSidewaysStairsRightSideTop(currentBehavior))
+     && dir == DIR_NORTH)
+        return COLLISION_IMPASSABLE;    //trying to move north off of top-most tile onto same level doesn't work
+    else if (!(MetatileBehavior_IsSidewaysStairsLeftSideTop(currentBehavior) || MetatileBehavior_IsSidewaysStairsRightSideTop(currentBehavior))
+     && dir == DIR_SOUTH && (MetatileBehavior_IsSidewaysStairsLeftSideTop(nextBehavior) || MetatileBehavior_IsSidewaysStairsRightSideTop(nextBehavior)))
+        return COLLISION_IMPASSABLE;    //trying to move south onto top stair tile at same level from non-stair -> no
+    else if (!(MetatileBehavior_IsSidewaysStairsLeftSideBottom(currentBehavior) || MetatileBehavior_IsSidewaysStairsRightSideBottom(currentBehavior))
+     && dir == DIR_NORTH && (MetatileBehavior_IsSidewaysStairsLeftSideBottom(nextBehavior) || MetatileBehavior_IsSidewaysStairsRightSideBottom(nextBehavior)))
+        return COLLISION_IMPASSABLE;    //trying to move north onto top stair tile at same level from non-stair -> no
+    
     if (IsCoordOutsideObjectEventMovementRange(objectEvent, x, y))
         return COLLISION_OUTSIDE_RANGE;
     else if (MapGridIsImpassableAt(x, y) || GetMapBorderIdAt(x, y) == -1 || IsMetatileDirectionallyImpassable(objectEvent, x, y, direction))
