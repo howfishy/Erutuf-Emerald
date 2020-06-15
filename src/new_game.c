@@ -208,10 +208,13 @@ void NewGameInitData(void)
     ResetTrainerHillResults();
     ResetContestLinkResults();
     
+    // testing
     FlagSet(FLAG_SYS_B_DASH);
     AddBagItem(ITEM_MACH_BIKE, 1);
     AddBagItem(ITEM_ACRO_BIKE, 1);
     gSaveBlock1Ptr->registeredItem = ITEM_ACRO_BIKE;
+
+    memset(&gSaveBlock2Ptr->follower, 0, sizeof(gSaveBlock2Ptr->follower));
 }
 
 static void ResetMiniGamesResults(void)
