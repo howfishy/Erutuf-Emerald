@@ -1557,6 +1557,14 @@ bool8 MetatileBehavior_IsSidewaysStairsLeftSideAny(u8 metatileBehavior)
         return FALSE;
 }
 
+bool8 MetatileBehavior_IsSidewaysStairsAny(u8 metatileBehavior)
+{
+    if (MetatileBehavior_IsSidewaysStairsRightSideAny(metatileBehavior) || MetatileBehavior_IsSidewaysStairsLeftSideAny(metatileBehavior))
+        return TRUE;
+    else
+        return FALSE;
+}
+
 bool8 MetatileBehavior_IsRockStairs(u8 metatileBehavior)
 {
     if (metatileBehavior == MB_ROCK_STAIRS)

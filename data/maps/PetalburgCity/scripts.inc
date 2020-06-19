@@ -87,11 +87,12 @@ PetalburgCity_EventScript_WalkToWallyHouse:: @ 81DC390
 PetalburgCity_EventScript_Boy1:: @ 81DC3E6
 	lock
 	faceplayer
-	msgbox PetalburgCity_Text_WaterReflection, MSGBOX_DEFAULT
-	closemessage
-	applymovement 3, Common_Movement_FaceOriginalDirection
-	waitmovement 0
-	release
+	@msgbox PetalburgCity_Text_WaterReflection, MSGBOX_DEFAULT
+	@closemessage
+	@applymovement 3, Common_Movement_FaceOriginalDirection
+	@waitmovement 0
+	setfollower 2, FOLLOWER_FLAG_ALL_LAND
+    release
 	end
 
 PetalburgCity_EventScript_WallyAunt:: @ 81DC3FD

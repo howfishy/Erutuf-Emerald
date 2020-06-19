@@ -691,10 +691,10 @@ const u8 gMoveDirectionAnimNums[] = {
     [DIR_NORTH] = 5,
     [DIR_WEST] = 6,
     [DIR_EAST] = 7,
-    [DIR_SOUTHWEST] = 4,
-    [DIR_SOUTHEAST] = 4,
-    [DIR_NORTHWEST] = 5,
-    [DIR_NORTHEAST] = 5,
+    [DIR_SOUTHWEST] = 6,
+    [DIR_SOUTHEAST] = 7,
+    [DIR_NORTHWEST] = 6,
+    [DIR_NORTHEAST] = 7,
 };
 const u8 gMoveDirectionFastAnimNums[] = {
     [DIR_NONE] = 8,
@@ -702,10 +702,10 @@ const u8 gMoveDirectionFastAnimNums[] = {
     [DIR_NORTH] = 9,
     [DIR_WEST] = 10,
     [DIR_EAST] = 11,
-    [DIR_SOUTHWEST] = 8,
-    [DIR_SOUTHEAST] = 8,
-    [DIR_NORTHWEST] = 9,
-    [DIR_NORTHEAST] = 9,
+    [DIR_SOUTHWEST] = 10,
+    [DIR_SOUTHEAST] = 11,
+    [DIR_NORTHWEST] = 10,
+    [DIR_NORTHEAST] = 11,
 };
 const u8 gMoveDirectionFasterAnimNums[] = {
     [DIR_NONE] = 12,
@@ -713,10 +713,10 @@ const u8 gMoveDirectionFasterAnimNums[] = {
     [DIR_NORTH] = 13,
     [DIR_WEST] = 14,
     [DIR_EAST] = 15,
-    [DIR_SOUTHWEST] = 12,
-    [DIR_SOUTHEAST] = 12,
-    [DIR_NORTHWEST] = 13,
-    [DIR_NORTHEAST] = 13,
+    [DIR_SOUTHWEST] = 14,
+    [DIR_SOUTHEAST] = 15,
+    [DIR_NORTHWEST] = 14,
+    [DIR_NORTHEAST] = 15,
 };
 const u8 gMoveDirectionFastestAnimNums[] = {
     [DIR_NONE] = 16,
@@ -724,10 +724,10 @@ const u8 gMoveDirectionFastestAnimNums[] = {
     [DIR_NORTH] = 17,
     [DIR_WEST] = 18,
     [DIR_EAST] = 19,
-    [DIR_SOUTHWEST] = 16,
-    [DIR_SOUTHEAST] = 16,
-    [DIR_NORTHWEST] = 17,
-    [DIR_NORTHEAST] = 17,
+    [DIR_SOUTHWEST] = 18,
+    [DIR_SOUTHEAST] = 19,
+    [DIR_NORTHWEST] = 18,
+    [DIR_NORTHEAST] = 19,
 };
 const u8 gJumpSpecialDirectionAnimNums[] = { // used for jumping onto surf mon
     [DIR_NONE] = 20,
@@ -4835,11 +4835,98 @@ static u8 GetCollisionInDirection(struct ObjectEvent *objectEvent, u8 direction)
     return GetCollisionAtCoords(objectEvent, x, y, direction);
 }
 
+static u8 GetSidewaysStairsCollision(struct ObjectEvent *objectEvent, u8 dir, u8 currentBehavior, u8 nextBehavior, u8 collision, s16 x, s16 y)
+{
+    if (MetatileBehavior_IsSidewaysStairsLeftSide(nextBehavior))
+    {
+        //moving ONTO left side stair
+        if (dir == DIR_WEST && currentBehavior != nextBehavior)
+            return collision;   //moving onto top part of left-stair going left, so no diagonal
+        else
+            return COLLISION_SIDEWAYS_STAIRS_TO_LEFT; // move diagonally
+    }
+    else if (MetatileBehavior_IsSidewaysStairsRightSide(nextBehavior))
+    {
+        //moving ONTO right side stair
+        if (dir == DIR_EAST && currentBehavior != nextBehavior)
+            return collision;   //moving onto top part of right-stair going right, so no diagonal
+        else
+            return COLLISION_SIDEWAYS_STAIRS_TO_RIGHT;
+    }
+    else if (MetatileBehavior_IsSidewaysStairsLeftSideAny(currentBehavior))
+    {
+        //moving OFF of any left side stair
+        if (dir == DIR_WEST && nextBehavior != currentBehavior)
+            return COLLISION_SIDEWAYS_STAIRS_TO_LEFT;   //moving off of left stairs onto non-stair -> move diagonal
+        else
+            return collision;   //moving off of left side stair to east -> move east
+    }
+    else if (MetatileBehavior_IsSidewaysStairsRightSideAny(currentBehavior))
+    {
+        //moving OFF of any right side stair
+        if (dir == DIR_EAST && nextBehavior != currentBehavior)
+            return COLLISION_SIDEWAYS_STAIRS_TO_RIGHT;  //moving off right stair onto non-stair -> move diagonal
+        else
+            return collision;
+    }
+    
+    return collision;
+}
+
+static u8 GetVanillaCollision(struct ObjectEvent *objectEvent, s16 x, s16 y, u8 direction)
+{
+    if (IsCoordOutsideObjectEventMovementRange(objectEvent, x, y))
+        return COLLISION_OUTSIDE_RANGE;
+    else if (MapGridIsImpassableAt(x, y) || GetMapBorderIdAt(x, y) == -1 || IsMetatileDirectionallyImpassable(objectEvent, x, y, direction))
+        return COLLISION_IMPASSABLE;
+    else if (objectEvent->trackedByCamera && !CanCameraMoveInDirection(direction))
+        return COLLISION_IMPASSABLE;
+    else if (IsZCoordMismatchAt(objectEvent->currentElevation, x, y))
+        return COLLISION_ELEVATION_MISMATCH;
+    else if (DoesObjectCollideWithObjectAt(objectEvent, x, y))
+        return COLLISION_OBJECT_EVENT;
+    
+    return COLLISION_NONE;
+}
+
+static bool8 ObjectEventOnLeftSideStair(struct ObjectEvent *objectEvent, s16 x, s16 y, u8 direction)
+{
+    switch (direction)
+    {
+    case DIR_EAST:
+        MoveCoords(DIR_NORTH, &x, &y);
+        return DoesObjectCollideWithObjectAt(objectEvent, x, y);
+    case DIR_WEST:
+        MoveCoords(DIR_SOUTH, &x, &y);
+        return DoesObjectCollideWithObjectAt(objectEvent, x, y);
+    default:
+        return FALSE;   //north/south taken care of in GetVanillaCollision
+    }
+}
+
+static bool8 ObjectEventOnRightSideStair(struct ObjectEvent *objectEvent, s16 x, s16 y, u8 direction)
+{
+    switch (direction)
+    {
+    case DIR_EAST:
+        MoveCoords(DIR_SOUTH, &x, &y);
+        return DoesObjectCollideWithObjectAt(objectEvent, x, y);
+    case DIR_WEST:
+        MoveCoords(DIR_NORTH, &x, &y);
+        return DoesObjectCollideWithObjectAt(objectEvent, x, y);
+    default:
+        return FALSE;   //north/south taken care of in GetVanillaCollision
+    }
+}
+
 u8 GetCollisionAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, u32 dir)
 {
     u8 direction = dir;
     u8 currentBehavior = MapGridGetMetatileBehaviorAt(objectEvent->currentCoords.x, objectEvent->currentCoords.y);
     u8 nextBehavior = MapGridGetMetatileBehaviorAt(x, y);
+    u8 collision;
+    
+    objectEvent->directionOverwrite = DIR_NONE;
     
     //sideways stairs checks
     if (MetatileBehavior_IsSidewaysStairsLeftSideTop(nextBehavior) && dir == DIR_EAST)
@@ -4860,17 +4947,26 @@ u8 GetCollisionAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, u32 dir)
      && dir == DIR_NORTH && (MetatileBehavior_IsSidewaysStairsLeftSideBottom(nextBehavior) || MetatileBehavior_IsSidewaysStairsRightSideBottom(nextBehavior)))
         return COLLISION_IMPASSABLE;    //trying to move north onto top stair tile at same level from non-stair -> no
     
-    if (IsCoordOutsideObjectEventMovementRange(objectEvent, x, y))
-        return COLLISION_OUTSIDE_RANGE;
-    else if (MapGridIsImpassableAt(x, y) || GetMapBorderIdAt(x, y) == -1 || IsMetatileDirectionallyImpassable(objectEvent, x, y, direction))
-        return COLLISION_IMPASSABLE;
-    else if (objectEvent->trackedByCamera && !CanCameraMoveInDirection(direction))
-        return COLLISION_IMPASSABLE;
-    else if (IsZCoordMismatchAt(objectEvent->currentElevation, x, y))
-        return COLLISION_ELEVATION_MISMATCH;
-    else if (DoesObjectCollideWithObjectAt(objectEvent, x, y))
-        return COLLISION_OBJECT_EVENT;
-    return COLLISION_NONE;
+    // regular checks
+    collision = GetVanillaCollision(objectEvent, x, y, dir);
+    
+    //sideways stairs checks
+    collision = GetSidewaysStairsCollision(objectEvent, dir, currentBehavior, nextBehavior, collision, x, y);
+    switch (collision)
+    {
+    case COLLISION_SIDEWAYS_STAIRS_TO_LEFT:
+        if (ObjectEventOnLeftSideStair(objectEvent, x, y, dir))
+            return COLLISION_OBJECT_EVENT;
+        objectEvent->directionOverwrite = GetLeftSideStairsDirection(dir);
+        return COLLISION_NONE;
+    case COLLISION_SIDEWAYS_STAIRS_TO_RIGHT:
+        if (ObjectEventOnRightSideStair(objectEvent, x, y, dir))
+            return COLLISION_OBJECT_EVENT;
+        objectEvent->directionOverwrite = GetRightSideStairsDirection(dir);
+        return COLLISION_NONE;
+    }
+    
+    return collision;
 }
 
 u8 GetCollisionFlagsAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, u8 direction)
@@ -5483,7 +5579,10 @@ bool8 MovementAction_WalkSlowUp_Step1(struct ObjectEvent *objectEvent, struct Sp
 
 bool8 MovementAction_WalkSlowLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8093B60(objectEvent, sprite, DIR_WEST);
+    if (objectEvent->directionOverwrite)
+        sub_8093B60(objectEvent, sprite, objectEvent->directionOverwrite);
+    else
+        sub_8093B60(objectEvent, sprite, DIR_WEST);
     return MovementAction_WalkSlowLeft_Step1(objectEvent, sprite);
 }
 
@@ -5499,7 +5598,10 @@ bool8 MovementAction_WalkSlowLeft_Step1(struct ObjectEvent *objectEvent, struct 
 
 bool8 MovementAction_WalkSlowRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8093B60(objectEvent, sprite, DIR_EAST);
+    if (objectEvent->directionOverwrite)
+        sub_8093B60(objectEvent, sprite, objectEvent->directionOverwrite);
+    else
+        sub_8093B60(objectEvent, sprite, DIR_EAST);
     return MovementAction_WalkSlowRight_Step1(objectEvent, sprite);
 }
 
@@ -5611,7 +5713,10 @@ bool8 MovementAction_WalkNormalUp_Step1(struct ObjectEvent *objectEvent, struct 
 
 bool8 MovementAction_WalkNormalLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_WEST, 0);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 0);
+    else
+        do_go_anim(objectEvent, sprite, DIR_WEST, 0);
     return MovementAction_WalkNormalLeft_Step1(objectEvent, sprite);
 }
 
@@ -5627,7 +5732,10 @@ bool8 MovementAction_WalkNormalLeft_Step1(struct ObjectEvent *objectEvent, struc
 
 bool8 MovementAction_WalkNormalRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_EAST, 0);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 0);
+    else
+        do_go_anim(objectEvent, sprite, DIR_EAST, 0);
     return MovementAction_WalkNormalRight_Step1(objectEvent, sprite);
 }
 
@@ -9285,7 +9393,7 @@ bool8 MovementActionFunc_RunSlow_Step1(struct ObjectEvent *objectEvent, struct S
 bool8 MovementAction_WalkStairDiagonalUpLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_WEST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         sub_8093B60(objectEvent, sprite, DIR_NORTHWEST);
         return MovementAction_WalkSlowDiagonalUpLeft_Step1(objectEvent, sprite);
@@ -9298,7 +9406,7 @@ bool8 MovementAction_WalkStairDiagonalUpLeft_Step0(struct ObjectEvent *objectEve
 bool8 MovementAction_WalkStairDiagonalUpRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_EAST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         sub_8093B60(objectEvent, sprite, DIR_NORTHEAST);
         return MovementAction_WalkSlowDiagonalUpRight_Step1(objectEvent, sprite);
@@ -9311,7 +9419,7 @@ bool8 MovementAction_WalkStairDiagonalUpRight_Step0(struct ObjectEvent *objectEv
 bool8 MovementAction_WalkStairDiagonalDownLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_WEST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         sub_8093B60(objectEvent, sprite, DIR_SOUTHWEST);
         return MovementAction_WalkSlowDiagonalDownLeft_Step1(objectEvent, sprite);
@@ -9324,7 +9432,7 @@ bool8 MovementAction_WalkStairDiagonalDownLeft_Step0(struct ObjectEvent *objectE
 bool8 MovementAction_WalkStairDiagonalDownRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_EAST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         sub_8093B60(objectEvent, sprite, DIR_SOUTHEAST);
         return MovementAction_WalkSlowDiagonalDownRight_Step1(objectEvent, sprite);
@@ -9337,7 +9445,7 @@ bool8 MovementAction_WalkStairDiagonalDownRight_Step0(struct ObjectEvent *object
 bool8 MovementAction_RunStairDiagonalUpLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_WEST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         StartSlowRunningAnim(objectEvent, sprite, DIR_NORTHWEST);
     #else
@@ -9349,7 +9457,7 @@ bool8 MovementAction_RunStairDiagonalUpLeft_Step0(struct ObjectEvent *objectEven
 bool8 MovementAction_RunStairDiagonalUpRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_EAST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         StartSlowRunningAnim(objectEvent, sprite, DIR_NORTHEAST);
     #else
@@ -9361,7 +9469,7 @@ bool8 MovementAction_RunStairDiagonalUpRight_Step0(struct ObjectEvent *objectEve
 bool8 MovementAction_RunStairDiagonalDownLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_WEST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         StartSlowRunningAnim(objectEvent, sprite, DIR_SOUTHWEST);
     #else
@@ -9373,7 +9481,7 @@ bool8 MovementAction_RunStairDiagonalDownLeft_Step0(struct ObjectEvent *objectEv
 bool8 MovementAction_RunStairDiagonalDownRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     objectEvent->facingDirection = DIR_EAST;
-    objectEvent->facingDirectionLocked = TRUE;
+    //objectEvent->facingDirectionLocked = TRUE;
     #if SLOW_MOVEMENT_ON_STAIRS == TRUE
         StartSlowRunningAnim(objectEvent, sprite, DIR_SOUTHEAST);
     #else
