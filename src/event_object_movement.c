@@ -58,13 +58,12 @@ static u8 setup##_callback(struct ObjectEvent *objectEvent, struct Sprite *sprit
 EWRAM_DATA u8 sCurrentReflectionType = 0;
 EWRAM_DATA u16 sCurrentSpecialObjectPaletteTag = 0;
 EWRAM_DATA struct LockedAnimObjectEvents *gLockedAnimObjectEvents = {0};
-EWRAM_DATA u8 gSidewaysStairsDirection = 0;
+//EWRAM_DATA u8 gSidewaysStairsDirection = 0;
 
 static void MoveCoordsInDirection(u32, s16 *, s16 *, s16, s16);
 static bool8 ObjectEventExecSingleMovementAction(struct ObjectEvent *, struct Sprite *);
 static void SetMovementDelay(struct Sprite *, s16);
 static bool8 WaitForMovementDelay(struct Sprite *);
-static u8 GetCollisionInDirection(struct ObjectEvent *, u8);
 static u32 state_to_direction(u8, u32, u32);
 static void TryEnableObjectEventAnim(struct ObjectEvent *, struct Sprite *);
 static void ObjectEventExecHeldMovementAction(struct ObjectEvent *, struct Sprite *);
@@ -133,6 +132,9 @@ static void ClearObjectEventMovement(struct ObjectEvent *, struct Sprite *);
 static void ObjectEventSetSingleMovement(struct ObjectEvent *, struct Sprite *, u8);
 static void oamt_npc_ministep_reset(struct Sprite *, u8, u8);
 static void UpdateObjectEventSpriteSubpriorityAndVisibility(struct Sprite *);
+
+static void StartSlowRunningAnim(struct ObjectEvent *objectEvent, struct Sprite *sprite, u8 direction);
+static bool8 npc_obj_ministep_stop_on_arrival_slow(struct ObjectEvent *objectEvent, struct Sprite *sprite);
 
 const u8 gReflectionEffectPaletteMap[] = {1, 1, 6, 7, 8, 9, 6, 7, 8, 9, 11, 11, 0, 0, 0, 0};
 
@@ -834,13 +836,13 @@ const u8 gRunningDirectionAnimNums[] = {
     [DIR_NORTH] = 21,
     [DIR_WEST] = 22,
     [DIR_EAST] = 23,
-    [DIR_SOUTHWEST] = 20,
-    [DIR_SOUTHEAST] = 20,
-    [DIR_NORTHWEST] = 21,
-    [DIR_NORTHEAST] = 21,
+    [DIR_SOUTHWEST] = 22,
+    [DIR_SOUTHEAST] = 23,
+    [DIR_NORTHWEST] = 22,
+    [DIR_NORTHEAST] = 23,
 };
 
-const u8 gStairsRunningDirectionAnimNums[] = {
+/*const u8 gStairsRunningDirectionAnimNums[] = {
     [DIR_NONE] = 20,
     [DIR_SOUTH] = 20,
     [DIR_NORTH] = 21,
@@ -850,7 +852,7 @@ const u8 gStairsRunningDirectionAnimNums[] = {
     [DIR_SOUTHEAST] = 23,
     [DIR_NORTHWEST] = 22,
     [DIR_NORTHEAST] = 23,
-};
+};*/
 
 const u8 gTrainerFacingDirectionMovementTypes[] = {
     [DIR_NONE] = MOVEMENT_TYPE_FACE_DOWN,
@@ -961,18 +963,26 @@ const u8 gWalkFastestMovementActions[] = {
     [DIR_NORTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_RIGHT
 };
 const u8 gSlideMovementActions[] = {
-    MOVEMENT_ACTION_SLIDE_DOWN,
-    MOVEMENT_ACTION_SLIDE_DOWN,
-    MOVEMENT_ACTION_SLIDE_UP,
-    MOVEMENT_ACTION_SLIDE_LEFT,
-    MOVEMENT_ACTION_SLIDE_RIGHT,
+    [DIR_NONE] = MOVEMENT_ACTION_SLIDE_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_SLIDE_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_SLIDE_UP,
+    [DIR_WEST] = MOVEMENT_ACTION_SLIDE_LEFT,
+    [DIR_EAST] = MOVEMENT_ACTION_SLIDE_RIGHT,
+    [DIR_SOUTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_LEFT,
+    [DIR_SOUTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_RIGHT,
+    [DIR_NORTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_LEFT,
+    [DIR_NORTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_RIGHT
 };
 const u8 gPlayerRunMovementActions[] = {
-    MOVEMENT_ACTION_PLAYER_RUN_DOWN,
-    MOVEMENT_ACTION_PLAYER_RUN_DOWN,
-    MOVEMENT_ACTION_PLAYER_RUN_UP,
-    MOVEMENT_ACTION_PLAYER_RUN_LEFT,
-    MOVEMENT_ACTION_PLAYER_RUN_RIGHT,
+    [DIR_NONE] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_PLAYER_RUN_UP,
+    [DIR_WEST] = MOVEMENT_ACTION_PLAYER_RUN_LEFT,
+    [DIR_EAST] = MOVEMENT_ACTION_PLAYER_RUN_RIGHT,
+    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT_RUNNING,
+    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT_RUNNING,
+    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT_RUNNING,
+    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT_RUNNING,
 };
 const u8 gJump2MovementActions[] = {
     MOVEMENT_ACTION_JUMP_2_DOWN,
@@ -1010,32 +1020,48 @@ const u8 gJumpSpecialMovementActions[] = {
     MOVEMENT_ACTION_JUMP_SPECIAL_RIGHT,
 };
 const u8 gWalkInPlaceSlowMovementActions[] = {
-    MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_UP,
-    MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_LEFT,
-    MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_RIGHT,
+    [DIR_NONE] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_UP,
+    [DIR_WEST] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_LEFT,
+    [DIR_EAST] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_RIGHT,
+    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_LEFT,
+    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_LEFT,
+    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_RIGHT,
+    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_SLOW_RIGHT
 };
 const u8 gWalkInPlaceNormalMovementActions[] = {
-    MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_UP,
-    MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_LEFT,
-    MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_RIGHT,
+    [DIR_NONE] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_UP,
+    [DIR_WEST] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_LEFT,
+    [DIR_EAST] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_RIGHT,
+    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_LEFT,
+    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_LEFT,
+    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_RIGHT,
+    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_NORMAL_RIGHT
 };
 const u8 gWalkInPlaceFastMovementActions[] = {
-    MOVEMENT_ACTION_WALK_IN_PLACE_FAST_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FAST_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FAST_UP,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FAST_LEFT,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FAST_RIGHT,
+    [DIR_NONE] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_UP,
+    [DIR_WEST] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_LEFT,
+    [DIR_EAST] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_RIGHT,
+    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_LEFT,
+    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_LEFT,
+    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_RIGHT,
+    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_FAST_RIGHT
 };
 const u8 gWalkInPlaceFastestMovementActions[] = {
-    MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_DOWN,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_UP,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_LEFT,
-    MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_RIGHT,
+    [DIR_NONE] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_DOWN,
+    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_DOWN,
+    [DIR_NORTH] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_UP,
+    [DIR_WEST] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_LEFT,
+    [DIR_EAST] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_RIGHT,
+    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_LEFT,
+    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_LEFT,
+    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_RIGHT,
+    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_IN_PLACE_FASTEST_RIGHT
 };
 const u8 gAcroWheelieFaceDirectionMovementActions[] = {
     [DIR_NONE] = MOVEMENT_ACTION_ACRO_WHEELIE_FACE_DOWN,
@@ -1154,6 +1180,10 @@ const u8 gRunSlowMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_RUN_UP_SLOW,
     [DIR_WEST]  = MOVEMENT_ACTION_RUN_LEFT_SLOW,
     [DIR_EAST]  = MOVEMENT_ACTION_RUN_RIGHT_SLOW,
+    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT_RUNNING,
+    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT_RUNNING,
+    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT_RUNNING,
+    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT_RUNNING,
 };
 
 // sideways stairs
@@ -4825,7 +4855,7 @@ u8 GetTrainerFacingDirectionMovementType(u8 direction)
     return gTrainerFacingDirectionMovementTypes[direction];
 }
 
-static u8 GetCollisionInDirection(struct ObjectEvent *objectEvent, u8 direction)
+u8 GetCollisionInDirection(struct ObjectEvent *objectEvent, u8 direction)
 {
     s16 x;
     s16 y;
@@ -4835,8 +4865,11 @@ static u8 GetCollisionInDirection(struct ObjectEvent *objectEvent, u8 direction)
     return GetCollisionAtCoords(objectEvent, x, y, direction);
 }
 
-static u8 GetSidewaysStairsCollision(struct ObjectEvent *objectEvent, u8 dir, u8 currentBehavior, u8 nextBehavior, u8 collision, s16 x, s16 y)
+u8 GetSidewaysStairsCollision(struct ObjectEvent *objectEvent, u8 dir, u8 currentBehavior, u8 nextBehavior, u8 collision)
 {
+    if ((dir == DIR_SOUTH || dir == DIR_NORTH) && collision != COLLISION_NONE)
+        return collision;
+    
     if (MetatileBehavior_IsSidewaysStairsLeftSide(nextBehavior))
     {
         //moving ONTO left side stair
@@ -4951,7 +4984,7 @@ u8 GetCollisionAtCoords(struct ObjectEvent *objectEvent, s16 x, s16 y, u32 dir)
     collision = GetVanillaCollision(objectEvent, x, y, dir);
     
     //sideways stairs checks
-    collision = GetSidewaysStairsCollision(objectEvent, dir, currentBehavior, nextBehavior, collision, x, y);
+    collision = GetSidewaysStairsCollision(objectEvent, dir, currentBehavior, nextBehavior, collision);
     switch (collision)
     {
     case COLLISION_SIDEWAYS_STAIRS_TO_LEFT:
@@ -5994,7 +6027,10 @@ bool8 MovementAction_WalkFastUp_Step1(struct ObjectEvent *objectEvent, struct Sp
 
 bool8 MovementAction_WalkFastLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_WEST, 1);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 1);
+    else
+        do_go_anim(objectEvent, sprite, DIR_WEST, 1);
     return MovementAction_WalkFastLeft_Step1(objectEvent, sprite);
 }
 
@@ -6010,7 +6046,10 @@ bool8 MovementAction_WalkFastLeft_Step1(struct ObjectEvent *objectEvent, struct 
 
 bool8 MovementAction_WalkFastRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_EAST, 1);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 1);
+    else
+        do_go_anim(objectEvent, sprite, DIR_EAST, 1);
     return MovementAction_WalkFastRight_Step1(objectEvent, sprite);
 }
 
@@ -6140,13 +6179,19 @@ bool8 MovementAction_WalkInPlaceFastestUp_Step0(struct ObjectEvent *objectEvent,
 
 bool8 MovementAction_WalkInPlaceFastestLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8094554(objectEvent, sprite, DIR_WEST, GetMoveDirectionFasterAnimNum(DIR_WEST), 4);
+    if (objectEvent->directionOverwrite)
+        sub_8094554(objectEvent, sprite, objectEvent->directionOverwrite, GetMoveDirectionFasterAnimNum(DIR_WEST), 4);
+    else
+        sub_8094554(objectEvent, sprite, DIR_WEST, GetMoveDirectionFasterAnimNum(DIR_WEST), 4);
     return MovementAction_WalkInPlace_Step1(objectEvent, sprite);
 }
 
 bool8 MovementAction_WalkInPlaceFastestRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8094554(objectEvent, sprite, DIR_EAST, GetMoveDirectionFasterAnimNum(DIR_EAST), 4);
+    if (objectEvent->directionOverwrite)
+        sub_8094554(objectEvent, sprite, objectEvent->directionOverwrite, GetMoveDirectionFasterAnimNum(DIR_WEST), 4);
+    else
+        sub_8094554(objectEvent, sprite, DIR_EAST, GetMoveDirectionFasterAnimNum(DIR_EAST), 4);
     return MovementAction_WalkInPlace_Step1(objectEvent, sprite);
 }
 
@@ -6184,7 +6229,10 @@ bool8 MovementAction_RideWaterCurrentUp_Step1(struct ObjectEvent *objectEvent, s
 
 bool8 MovementAction_RideWaterCurrentLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_WEST, 2);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 2);
+    else
+        do_go_anim(objectEvent, sprite, DIR_WEST, 2);
     return MovementAction_RideWaterCurrentLeft_Step1(objectEvent, sprite);
 }
 
@@ -6200,7 +6248,10 @@ bool8 MovementAction_RideWaterCurrentLeft_Step1(struct ObjectEvent *objectEvent,
 
 bool8 MovementAction_RideWaterCurrentRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_EAST, 2);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 2);
+    else
+        do_go_anim(objectEvent, sprite, DIR_EAST, 2);
     return MovementAction_RideWaterCurrentRight_Step1(objectEvent, sprite);
 }
 
@@ -6248,7 +6299,10 @@ bool8 MovementAction_WalkFastestUp_Step1(struct ObjectEvent *objectEvent, struct
 
 bool8 MovementAction_WalkFastestLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_WEST, 3);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 3);
+    else
+        do_go_anim(objectEvent, sprite, DIR_WEST, 3);
     return MovementAction_WalkFastestLeft_Step1(objectEvent, sprite);
 }
 
@@ -6264,7 +6318,10 @@ bool8 MovementAction_WalkFastestLeft_Step1(struct ObjectEvent *objectEvent, stru
 
 bool8 MovementAction_WalkFastestRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_EAST, 3);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 3);
+    else
+        do_go_anim(objectEvent, sprite, DIR_EAST, 3);
     return MovementAction_WalkFastestRight_Step1(objectEvent, sprite);
 }
 
@@ -6312,7 +6369,10 @@ bool8 MovementAction_SlideUp_Step1(struct ObjectEvent *objectEvent, struct Sprit
 
 bool8 MovementAction_SlideLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_WEST, 4);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 4);
+    else
+        do_go_anim(objectEvent, sprite, DIR_WEST, 4);
     return MovementAction_SlideLeft_Step1(objectEvent, sprite);
 }
 
@@ -6328,7 +6388,10 @@ bool8 MovementAction_SlideLeft_Step1(struct ObjectEvent *objectEvent, struct Spr
 
 bool8 MovementAction_SlideRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    do_go_anim(objectEvent, sprite, DIR_EAST, 4);
+    if (objectEvent->directionOverwrite)
+        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 4);
+    else
+        do_go_anim(objectEvent, sprite, DIR_EAST, 4);
     return MovementAction_SlideRight_Step1(objectEvent, sprite);
 }
 
@@ -6376,7 +6439,10 @@ bool8 MovementAction_PlayerRunUp_Step1(struct ObjectEvent *objectEvent, struct S
 
 bool8 MovementAction_PlayerRunLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    StartRunningAnim(objectEvent, sprite, DIR_WEST);
+    if (objectEvent->directionOverwrite)
+        StartRunningAnim(objectEvent, sprite, objectEvent->directionOverwrite);
+    else
+        StartRunningAnim(objectEvent, sprite, DIR_WEST);
     return MovementAction_PlayerRunLeft_Step1(objectEvent, sprite);
 }
 
@@ -6392,7 +6458,10 @@ bool8 MovementAction_PlayerRunLeft_Step1(struct ObjectEvent *objectEvent, struct
 
 bool8 MovementAction_PlayerRunRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    StartRunningAnim(objectEvent, sprite, DIR_EAST);
+    if (objectEvent->directionOverwrite)
+        StartRunningAnim(objectEvent, sprite, objectEvent->directionOverwrite);
+    else
+        StartRunningAnim(objectEvent, sprite, DIR_EAST);
     return MovementAction_PlayerRunRight_Step1(objectEvent, sprite);
 }
 
@@ -7242,7 +7311,7 @@ bool8 MovementAction_AcroWheelieHopFaceRight_Step1(struct ObjectEvent *objectEve
 
 bool8 MovementAction_AcroWheelieHopDown_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection, 1, 1);
+    sub_8095B84(objectEvent, sprite, DIR_SOUTH, 1, 1);
     return MovementAction_AcroWheelieHopDown_Step1(objectEvent, sprite);
 }
 
@@ -7259,7 +7328,7 @@ bool8 MovementAction_AcroWheelieHopDown_Step1(struct ObjectEvent *objectEvent, s
 
 bool8 MovementAction_AcroWheelieHopUp_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection, 1, 1);
+    sub_8095B84(objectEvent, sprite, DIR_NORTH, 1, 1);
     return MovementAction_AcroWheelieHopUp_Step1(objectEvent, sprite);
 }
 
@@ -7276,7 +7345,10 @@ bool8 MovementAction_AcroWheelieHopUp_Step1(struct ObjectEvent *objectEvent, str
 
 bool8 MovementAction_AcroWheelieHopLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection,  1, 1);
+    if (objectEvent->directionOverwrite)
+        sub_8095B84(objectEvent, sprite, objectEvent->directionOverwrite, 1, 1);
+    else
+        sub_8095B84(objectEvent, sprite, DIR_WEST,  1, 1);
     return MovementAction_AcroWheelieHopLeft_Step1(objectEvent, sprite);
 }
 
@@ -7293,7 +7365,10 @@ bool8 MovementAction_AcroWheelieHopLeft_Step1(struct ObjectEvent *objectEvent, s
 
 bool8 MovementAction_AcroWheelieHopRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection,  1, 1);
+    if (objectEvent->directionOverwrite)
+        sub_8095B84(objectEvent, sprite, objectEvent->directionOverwrite, 1, 1);
+    else
+        sub_8095B84(objectEvent, sprite, DIR_EAST,  1, 1);
     return MovementAction_AcroWheelieHopRight_Step1(objectEvent, sprite);
 }
 
@@ -7310,7 +7385,7 @@ bool8 MovementAction_AcroWheelieHopRight_Step1(struct ObjectEvent *objectEvent, 
 
 bool8 MovementAction_AcroWheelieJumpDown_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection, 2, 0);
+    sub_8095B84(objectEvent, sprite, DIR_SOUTH, 2, 0);
     return MovementAction_AcroWheelieJumpDown_Step1(objectEvent, sprite);
 }
 
@@ -7327,7 +7402,7 @@ bool8 MovementAction_AcroWheelieJumpDown_Step1(struct ObjectEvent *objectEvent, 
 
 bool8 MovementAction_AcroWheelieJumpUp_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection, 2, 0);
+    sub_8095B84(objectEvent, sprite, DIR_NORTH, 2, 0);
     return MovementAction_AcroWheelieJumpUp_Step1(objectEvent, sprite);
 }
 
@@ -7344,7 +7419,10 @@ bool8 MovementAction_AcroWheelieJumpUp_Step1(struct ObjectEvent *objectEvent, st
 
 bool8 MovementAction_AcroWheelieJumpLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection,  2, 0);
+    if (objectEvent->directionOverwrite)
+        sub_8095B84(objectEvent, sprite, objectEvent->directionOverwrite, 2, 0);
+    else
+        sub_8095B84(objectEvent, sprite, DIR_WEST,  2, 0);
     return MovementAction_AcroWheelieJumpLeft_Step1(objectEvent, sprite);
 }
 
@@ -7361,7 +7439,10 @@ bool8 MovementAction_AcroWheelieJumpLeft_Step1(struct ObjectEvent *objectEvent, 
 
 bool8 MovementAction_AcroWheelieJumpRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095B84(objectEvent, sprite, gSidewaysStairsDirection,  2, 0);
+    if (objectEvent->directionOverwrite)
+        sub_8095B84(objectEvent, sprite, objectEvent->directionOverwrite, 2, 0);
+    else
+        sub_8095B84(objectEvent, sprite, DIR_EAST,  2, 0);
     return MovementAction_AcroWheelieJumpRight_Step1(objectEvent, sprite);
 }
 
@@ -7378,25 +7459,31 @@ bool8 MovementAction_AcroWheelieJumpRight_Step1(struct ObjectEvent *objectEvent,
 
 bool8 MovementAction_AcroWheelieInPlaceDown_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8094554(objectEvent, sprite, gSidewaysStairsDirection, GetAcroWheeliePedalDirectionAnimNum(gSidewaysStairsDirection), 8);
+    sub_8094554(objectEvent, sprite, DIR_SOUTH, GetAcroWheeliePedalDirectionAnimNum(DIR_SOUTH), 8);
     return MovementAction_WalkInPlace_Step1(objectEvent, sprite);
 }
 
 bool8 MovementAction_AcroWheelieInPlaceUp_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8094554(objectEvent, sprite, gSidewaysStairsDirection, GetAcroWheeliePedalDirectionAnimNum(gSidewaysStairsDirection), 8);
+    sub_8094554(objectEvent, sprite, DIR_NORTH, GetAcroWheeliePedalDirectionAnimNum(DIR_NORTH), 8);
     return MovementAction_WalkInPlace_Step1(objectEvent, sprite);
 }
 
 bool8 MovementAction_AcroWheelieInPlaceLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8094554(objectEvent, sprite, gSidewaysStairsDirection, GetAcroWheeliePedalDirectionAnimNum(gSidewaysStairsDirection), 8);
+    if (objectEvent->directionOverwrite)
+        sub_8094554(objectEvent, sprite, objectEvent->directionOverwrite, GetAcroWheeliePedalDirectionAnimNum(objectEvent->directionOverwrite), 8);
+    else
+        sub_8094554(objectEvent, sprite, DIR_WEST, GetAcroWheeliePedalDirectionAnimNum(DIR_WEST), 8);
     return MovementAction_WalkInPlace_Step1(objectEvent, sprite);
 }
 
 bool8 MovementAction_AcroWheelieInPlaceRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8094554(objectEvent, sprite, gSidewaysStairsDirection, GetAcroWheeliePedalDirectionAnimNum(gSidewaysStairsDirection), 8);
+    if (objectEvent->directionOverwrite)
+        sub_8094554(objectEvent, sprite, objectEvent->directionOverwrite, GetAcroWheeliePedalDirectionAnimNum(objectEvent->directionOverwrite), 8);
+    else
+        sub_8094554(objectEvent, sprite, DIR_EAST, GetAcroWheeliePedalDirectionAnimNum(DIR_EAST), 8);
     return MovementAction_WalkInPlace_Step1(objectEvent, sprite);
 }
 
@@ -7409,7 +7496,7 @@ void sub_80960C8(struct ObjectEvent *objectEvent, struct Sprite *sprite, u8 dire
 
 bool8 MovementAction_AcroPopWheelieMoveDown_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_80960C8(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    sub_80960C8(objectEvent, sprite, DIR_SOUTH, 1);
     return MovementAction_AcroPopWheelieMoveDown_Step1(objectEvent, sprite);
 }
 
@@ -7425,7 +7512,7 @@ bool8 MovementAction_AcroPopWheelieMoveDown_Step1(struct ObjectEvent *objectEven
 
 bool8 MovementAction_AcroPopWheelieMoveUp_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_80960C8(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    sub_80960C8(objectEvent, sprite, DIR_NORTH, 1);
     return MovementAction_AcroPopWheelieMoveUp_Step1(objectEvent, sprite);
 }
 
@@ -7441,7 +7528,10 @@ bool8 MovementAction_AcroPopWheelieMoveUp_Step1(struct ObjectEvent *objectEvent,
 
 bool8 MovementAction_AcroPopWheelieMoveLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_80960C8(objectEvent, sprite, gSidewaysStairsDirection,  1);
+    if (objectEvent->directionOverwrite)
+        sub_80960C8(objectEvent, sprite, objectEvent->directionOverwrite,  1);
+    else
+        sub_80960C8(objectEvent, sprite, DIR_WEST,  1);
     return MovementAction_AcroPopWheelieMoveLeft_Step1(objectEvent, sprite);
 }
 
@@ -7457,7 +7547,10 @@ bool8 MovementAction_AcroPopWheelieMoveLeft_Step1(struct ObjectEvent *objectEven
 
 bool8 MovementAction_AcroPopWheelieMoveRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_80960C8(objectEvent, sprite, gSidewaysStairsDirection,  1);
+    if (objectEvent->directionOverwrite)
+        sub_80960C8(objectEvent, sprite, objectEvent->directionOverwrite,  1);
+    else
+        sub_80960C8(objectEvent, sprite, DIR_EAST,  1);
     return MovementAction_AcroPopWheelieMoveRight_Step1(objectEvent, sprite);
 }
 
@@ -7479,7 +7572,7 @@ void sub_8096200(struct ObjectEvent *objectEvent, struct Sprite *sprite, u8 dire
 
 bool8 MovementAction_AcroWheelieMoveDown_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096200(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    sub_8096200(objectEvent, sprite, DIR_SOUTH, 1);
     return MovementAction_AcroWheelieMoveDown_Step1(objectEvent, sprite);
 }
 
@@ -7495,7 +7588,7 @@ bool8 MovementAction_AcroWheelieMoveDown_Step1(struct ObjectEvent *objectEvent, 
 
 bool8 MovementAction_AcroWheelieMoveUp_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096200(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    sub_8096200(objectEvent, sprite, DIR_NORTH, 1);
     return MovementAction_AcroWheelieMoveUp_Step1(objectEvent, sprite);
 }
 
@@ -7511,7 +7604,10 @@ bool8 MovementAction_AcroWheelieMoveUp_Step1(struct ObjectEvent *objectEvent, st
 
 bool8 MovementAction_AcroWheelieMoveLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096200(objectEvent, sprite, gSidewaysStairsDirection,  1);
+    if (objectEvent->directionOverwrite)
+        sub_8096200(objectEvent, sprite, objectEvent->directionOverwrite,  1);
+    else
+        sub_8096200(objectEvent, sprite, DIR_WEST,  1);
     return MovementAction_AcroWheelieMoveLeft_Step1(objectEvent, sprite);
 }
 
@@ -7527,7 +7623,10 @@ bool8 MovementAction_AcroWheelieMoveLeft_Step1(struct ObjectEvent *objectEvent, 
 
 bool8 MovementAction_AcroWheelieMoveRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096200(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    if (objectEvent->directionOverwrite)
+        sub_8096200(objectEvent, sprite, objectEvent->directionOverwrite,  1);
+    else
+        sub_8096200(objectEvent, sprite, DIR_EAST, 1);
     return MovementAction_AcroWheelieMoveRight_Step1(objectEvent, sprite);
 }
 
@@ -7550,7 +7649,7 @@ void sub_8096330(struct ObjectEvent *objectEvent, struct Sprite *sprite, u8 dire
 
 bool8 MovementAction_AcroEndWheelieMoveDown_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096330(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    sub_8096330(objectEvent, sprite, DIR_SOUTH, 1);
     return MovementAction_AcroEndWheelieMoveDown_Step1(objectEvent, sprite);
 }
 
@@ -7566,7 +7665,7 @@ bool8 MovementAction_AcroEndWheelieMoveDown_Step1(struct ObjectEvent *objectEven
 
 bool8 MovementAction_AcroEndWheelieMoveUp_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096330(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    sub_8096330(objectEvent, sprite, DIR_NORTH, 1);
     return MovementAction_AcroEndWheelieMoveUp_Step1(objectEvent, sprite);
 }
 
@@ -7582,7 +7681,10 @@ bool8 MovementAction_AcroEndWheelieMoveUp_Step1(struct ObjectEvent *objectEvent,
 
 bool8 MovementAction_AcroEndWheelieMoveLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096330(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    if (objectEvent->directionOverwrite)
+        sub_8096330(objectEvent, sprite, objectEvent->directionOverwrite,  1);
+    else
+        sub_8096330(objectEvent, sprite, DIR_WEST, 1);
     return MovementAction_AcroEndWheelieMoveLeft_Step1(objectEvent, sprite);
 }
 
@@ -7598,7 +7700,10 @@ bool8 MovementAction_AcroEndWheelieMoveLeft_Step1(struct ObjectEvent *objectEven
 
 bool8 MovementAction_AcroEndWheelieMoveRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8096330(objectEvent, sprite, gSidewaysStairsDirection, 1);
+    if (objectEvent->directionOverwrite)
+        sub_8096330(objectEvent, sprite, objectEvent->directionOverwrite,  1);
+    else
+        sub_8096330(objectEvent, sprite, DIR_EAST, 1);
     return MovementAction_AcroEndWheelieMoveRight_Step1(objectEvent, sprite);
 }
 
@@ -9369,13 +9474,19 @@ bool8 MovementActionFunc_RunSlowUp_Step0(struct ObjectEvent *objectEvent, struct
 
 bool8 MovementActionFunc_RunSlowLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    StartSlowRunningAnim(objectEvent, sprite, DIR_WEST);
+    if (objectEvent->directionOverwrite)
+        StartSlowRunningAnim(objectEvent, sprite, objectEvent->directionOverwrite);
+    else
+        StartSlowRunningAnim(objectEvent, sprite, DIR_WEST);
     return MovementActionFunc_RunSlow_Step1(objectEvent, sprite);
 }
 
 bool8 MovementActionFunc_RunSlowRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    StartSlowRunningAnim(objectEvent, sprite, DIR_EAST);
+    if (objectEvent->directionOverwrite)
+        StartSlowRunningAnim(objectEvent, sprite, objectEvent->directionOverwrite);
+    else
+        StartSlowRunningAnim(objectEvent, sprite, DIR_EAST);
     return MovementActionFunc_RunSlow_Step1(objectEvent, sprite);
 }
 

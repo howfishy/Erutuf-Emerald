@@ -17,6 +17,7 @@ enum FollowerSpriteTypes
 };
 
 // Exported Functions
+u8 GetFollowerMapObjId(void);
 void SetUpFollowerSprite(u8 localId, u16 flags);
 void DestroyFollower(void);
 void PlayerFaceFollowerSprite(void);

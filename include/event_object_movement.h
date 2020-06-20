@@ -116,6 +116,7 @@ u8 GetWalkInPlaceFastMovementAction(u32);
 u8 GetWalkInPlaceNormalMovementAction(u32);
 u8 GetWalkInPlaceSlowMovementAction(u32);
 u8 GetCollisionAtCoords(struct ObjectEvent *, s16, s16, u32);
+u8 GetCollisionInDirection(struct ObjectEvent *objectEvent, u8 direction);
 void MoveCoords(u8, s16 *, s16 *);
 bool8 ObjectEventIsHeldMovementActive(struct ObjectEvent *);
 u8 ObjectEventClearHeldMovementIfFinished(struct ObjectEvent *);
@@ -435,7 +436,6 @@ u8 GetDiagonalRightStairsMovement(u32);
 u8 GetDiagonalLeftStairsMovement(u32);
 u8 GetDiagonalRightStairsRunningMovement(u32);
 u8 GetDiagonalLeftStairsRunningMovement(u32);
-
-extern u8 gSidewaysStairsDirection;
+u8 GetSidewaysStairsCollision(struct ObjectEvent *objectEvent, u8 dir, u8 currentBehavior, u8 nextBehavior, u8 collision);
 
 #endif //GUARD_EVENT_OBJECT_MOVEMENT_H

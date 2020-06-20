@@ -91,9 +91,18 @@ PetalburgCity_EventScript_Boy1:: @ 81DC3E6
 	@closemessage
 	@applymovement 3, Common_Movement_FaceOriginalDirection
 	@waitmovement 0
-	setfollower 2, FOLLOWER_FLAG_ALL_LAND
+	msgbox Testing MSGBOX_AUTOCLOSE
+    setfollower 2, FOLLOWER_FLAG_ALL_LAND
     release
 	end
+Testing:
+    .string "I'll follow you!$"
+    
+EventScript_TestPetalburg::
+    msgbox Testing2 MSGBOX_NPC
+    end
+Testing2:
+    .string "Did you know you can talk\nto me on sideways stairs?$"
 
 PetalburgCity_EventScript_WallyAunt:: @ 81DC3FD
 	msgbox PetalburgCity_Text_WhereIsWally, MSGBOX_NPC

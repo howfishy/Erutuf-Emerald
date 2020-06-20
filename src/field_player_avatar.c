@@ -668,55 +668,14 @@ static void PlayerNotOnBikeMoving(u8 direction, u16 heldKeys)
     if (!(gPlayerAvatar.flags & PLAYER_AVATAR_FLAG_UNDERWATER) && (heldKeys & B_BUTTON) && FlagGet(FLAG_SYS_B_DASH)
      && IsRunningDisallowed(gObjectEvents[gPlayerAvatar.objectEventId].currentMetatileBehavior) == 0)
     {
-        if (PlayerIsMovingOnRockStairs(direction))
-            PlayerRunSlow(direction);
-        else
-            PlayerRun(direction);
-        
+        PlayerRun(direction);
         gPlayerAvatar.flags |= PLAYER_AVATAR_FLAG_DASH;
         return;
     }
     else
     {
-        if (PlayerIsMovingOnRockStairs(direction))
-            PlayerGoSlow(direction);
-        else
-            PlayerGoSpeed1(direction);
+        PlayerGoSpeed1(direction);
     }
-}
-
-bool32 PlayerIsMovingOnRockStairs(u8 direction)
-{
-    #if SLOW_MOVEMENT_ON_STAIRS
-        struct ObjectEvent *objectEvent = &gObjectEvents[gPlayerAvatar.objectEventId];
-        s16 x = objectEvent->currentCoords.x;
-        s16 y = objectEvent->currentCoords.y;
-        
-        switch (direction)
-        {
-        case DIR_NORTH:
-            return MetatileBehavior_IsRockStairs(MapGridGetMetatileBehaviorAt(x, y));
-        case DIR_SOUTH:
-            MoveCoords(DIR_SOUTH, &x, &y);
-            return MetatileBehavior_IsRockStairs(MapGridGetMetatileBehaviorAt(x, y));
-        case DIR_EAST:
-            if (MetatileBehavior_IsSidewaysStairsRightSideAny(MapGridGetMetatileBehaviorAt(x, y)))
-                return TRUE;
-            
-            MoveCoords(DIR_EAST, &x, &y);
-            return MetatileBehavior_IsSidewaysStairsLeftSideAny(MapGridGetMetatileBehaviorAt(x, y));
-        case DIR_WEST:
-            if (MetatileBehavior_IsSidewaysStairsLeftSideAny(MapGridGetMetatileBehaviorAt(x, y)))
-                return TRUE;
-            
-            MoveCoords(DIR_WEST, &x, &y);
-            return MetatileBehavior_IsSidewaysStairsRightSideAny(MapGridGetMetatileBehaviorAt(x, y));
-        default:
-            return FALSE;
-        }
-    #else
-        return FALSE;
-    #endif
 }
 
 static u8 CheckForPlayerAvatarCollision(u8 direction)

@@ -330,7 +330,7 @@ static void Task_ExitDoor(u8 taskId)
     switch (task->data[0])
     {
     case 0:
-        HideFollower();
+        //HideFollower();
         SetPlayerVisibility(FALSE);
         FreezeObjectEvents();
         PlayerGetDestCoords(x, y);
@@ -362,6 +362,7 @@ static void Task_ExitDoor(u8 taskId)
         {
             FollowMe_SetIndicatorToComeOutDoor();
             FollowMe_WarpSetEnd();
+            //ObjectEventSetHeldMovement(&gObjectEvents[GetFollowerMapObjId()], MOVEMENT_ACTION_WALK_NORMAL_DOWN);
             
             UnfreezeObjectEvents();
             task->data[0] = 4;
