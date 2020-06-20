@@ -58,7 +58,6 @@ static u8 setup##_callback(struct ObjectEvent *objectEvent, struct Sprite *sprit
 EWRAM_DATA u8 sCurrentReflectionType = 0;
 EWRAM_DATA u16 sCurrentSpecialObjectPaletteTag = 0;
 EWRAM_DATA struct LockedAnimObjectEvents *gLockedAnimObjectEvents = {0};
-//EWRAM_DATA u8 gSidewaysStairsDirection = 0;
 
 static void MoveCoordsInDirection(u32, s16 *, s16 *, s16, s16);
 static bool8 ObjectEventExecSingleMovementAction(struct ObjectEvent *, struct Sprite *);
@@ -842,18 +841,6 @@ const u8 gRunningDirectionAnimNums[] = {
     [DIR_NORTHEAST] = 23,
 };
 
-/*const u8 gStairsRunningDirectionAnimNums[] = {
-    [DIR_NONE] = 20,
-    [DIR_SOUTH] = 20,
-    [DIR_NORTH] = 21,
-    [DIR_WEST] = 22,
-    [DIR_EAST] = 23,
-    [DIR_SOUTHWEST] = 22,
-    [DIR_SOUTHEAST] = 23,
-    [DIR_NORTHWEST] = 22,
-    [DIR_NORTHEAST] = 23,
-};*/
-
 const u8 gTrainerFacingDirectionMovementTypes[] = {
     [DIR_NONE] = MOVEMENT_TYPE_FACE_DOWN,
     [DIR_SOUTH] = MOVEMENT_TYPE_FACE_DOWN,
@@ -913,10 +900,6 @@ const u8 gWalkSlowMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_WALK_SLOW_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_SLOW_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_SLOW_RIGHT,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_SLOW_DIAGONAL_DOWN_LEFT,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_SLOW_DIAGONAL_DOWN_RIGHT,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_SLOW_DIAGONAL_UP_LEFT,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_SLOW_DIAGONAL_UP_RIGHT
 };
 const u8 gWalkNormalMovementActions[] = {
     [DIR_NONE] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
@@ -924,10 +907,6 @@ const u8 gWalkNormalMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_WALK_NORMAL_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_NORMAL_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_NORMAL_RIGHT,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT
 };
 const u8 gWalkFastMovementActions[] = {
     [DIR_NONE] = MOVEMENT_ACTION_WALK_FAST_DOWN,
@@ -935,10 +914,6 @@ const u8 gWalkFastMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_WALK_FAST_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_FAST_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_FAST_RIGHT,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_LEFT,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_RIGHT,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_LEFT,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_RIGHT,
 };
 const u8 gRideWaterCurrentMovementActions[] = {
     [DIR_NONE] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN,
@@ -946,10 +921,6 @@ const u8 gRideWaterCurrentMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP,
     [DIR_WEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_RIGHT,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_LEFT,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_RIGHT,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_LEFT,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_RIGHT
 };
 const u8 gWalkFastestMovementActions[] = {
     [DIR_NONE] = MOVEMENT_ACTION_WALK_FASTEST_DOWN,
@@ -957,10 +928,6 @@ const u8 gWalkFastestMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_WALK_FASTEST_UP,
     [DIR_WEST] = MOVEMENT_ACTION_WALK_FASTEST_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_WALK_FASTEST_RIGHT,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_LEFT,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_RIGHT,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_LEFT,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_RIGHT
 };
 const u8 gSlideMovementActions[] = {
     [DIR_NONE] = MOVEMENT_ACTION_SLIDE_DOWN,
@@ -968,10 +935,6 @@ const u8 gSlideMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_SLIDE_UP,
     [DIR_WEST] = MOVEMENT_ACTION_SLIDE_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_SLIDE_RIGHT,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_LEFT,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_DOWN_RIGHT,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_LEFT,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_RIDE_WATER_CURRENT_UP_RIGHT
 };
 const u8 gPlayerRunMovementActions[] = {
     [DIR_NONE] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
@@ -979,10 +942,6 @@ const u8 gPlayerRunMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_PLAYER_RUN_UP,
     [DIR_WEST] = MOVEMENT_ACTION_PLAYER_RUN_LEFT,
     [DIR_EAST] = MOVEMENT_ACTION_PLAYER_RUN_RIGHT,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT_RUNNING,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT_RUNNING,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT_RUNNING,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT_RUNNING,
 };
 const u8 gJump2MovementActions[] = {
     MOVEMENT_ACTION_JUMP_2_DOWN,
@@ -1180,40 +1139,6 @@ const u8 gRunSlowMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_RUN_UP_SLOW,
     [DIR_WEST]  = MOVEMENT_ACTION_RUN_LEFT_SLOW,
     [DIR_EAST]  = MOVEMENT_ACTION_RUN_RIGHT_SLOW,
-    [DIR_SOUTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT_RUNNING,
-    [DIR_NORTHWEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT_RUNNING,
-    [DIR_SOUTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT_RUNNING,
-    [DIR_NORTHEAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT_RUNNING,
-};
-
-// sideways stairs
-const u8 gDiagonalStairLeftSideMovementActions[] = {    //movement actions for stairs on left side of a wall (southwest and northeast)
-    [DIR_NONE] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
-    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
-    [DIR_NORTH] = MOVEMENT_ACTION_WALK_NORMAL_UP,
-    [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT,
-    [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT,
-};
-const u8 gDiagonalStairRightSideMovementActions[] = {   //movement actions for stairs on right side of a wall (southeast and northwest)
-    [DIR_NONE] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
-    [DIR_SOUTH] = MOVEMENT_ACTION_WALK_NORMAL_DOWN,
-    [DIR_NORTH] = MOVEMENT_ACTION_WALK_NORMAL_UP,
-    [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT,
-    [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT,
-};
-const u8 gDiagonalStairRightSideRunningMovementActions[] = {
-    [DIR_NONE] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
-    [DIR_SOUTH] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
-    [DIR_NORTH] = MOVEMENT_ACTION_PLAYER_RUN_UP,
-    [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_LEFT_RUNNING,
-    [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_RIGHT_RUNNING,
-};
-const u8 gDiagonalStairLeftSideRunningMovementActions[] = {
-    [DIR_NONE] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
-    [DIR_SOUTH] = MOVEMENT_ACTION_PLAYER_RUN_DOWN,
-    [DIR_NORTH] = MOVEMENT_ACTION_PLAYER_RUN_UP,
-    [DIR_WEST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_DOWN_LEFT_RUNNING,
-    [DIR_EAST] = MOVEMENT_ACTION_WALK_STAIRS_DIAGONAL_UP_RIGHT_RUNNING,
 };
 
 const u8 gOppositeDirections[] = {
@@ -5300,12 +5225,6 @@ u8 name(u32 idx)\
     if (direction > sizeof(table)) direction = 0;\
     return animIds[direction];\
 }
-
-//sideways stairs
-dirn_to_anim(GetDiagonalRightStairsMovement, gDiagonalStairRightSideMovementActions);
-dirn_to_anim(GetDiagonalLeftStairsMovement, gDiagonalStairLeftSideMovementActions);
-dirn_to_anim(GetDiagonalRightStairsRunningMovement, gDiagonalStairRightSideRunningMovementActions);
-dirn_to_anim(GetDiagonalLeftStairsRunningMovement, gDiagonalStairLeftSideRunningMovementActions);
 
 dirn_to_anim(GetFaceDirectionMovementAction, gFaceDirectionMovementActions);
 dirn_to_anim(GetWalkSlowMovementAction, gWalkSlowMovementActions);
@@ -9499,163 +9418,3 @@ bool8 MovementActionFunc_RunSlow_Step1(struct ObjectEvent *objectEvent, struct S
     }
     return FALSE;
 }
-
-//sideways stairs
-bool8 MovementAction_WalkStairDiagonalUpLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_WEST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        sub_8093B60(objectEvent, sprite, DIR_NORTHWEST);
-        return MovementAction_WalkSlowDiagonalUpLeft_Step1(objectEvent, sprite);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_NORTHWEST, 0);
-        return MovementAction_WalkNormalDiagonalUpLeft_Step1(objectEvent, sprite);
-    #endif
-}
-
-bool8 MovementAction_WalkStairDiagonalUpRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_EAST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        sub_8093B60(objectEvent, sprite, DIR_NORTHEAST);
-        return MovementAction_WalkSlowDiagonalUpRight_Step1(objectEvent, sprite);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_NORTHEAST, 0);
-        return MovementAction_WalkNormalDiagonalUpLeft_Step1(objectEvent, sprite);
-    #endif
-}
-
-bool8 MovementAction_WalkStairDiagonalDownLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_WEST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        sub_8093B60(objectEvent, sprite, DIR_SOUTHWEST);
-        return MovementAction_WalkSlowDiagonalDownLeft_Step1(objectEvent, sprite);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_SOUTHWEST, 0);
-        return MovementAction_WalkNormalDiagonalUpLeft_Step1(objectEvent, sprite);
-    #endif
-}
-
-bool8 MovementAction_WalkStairDiagonalDownRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_EAST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        sub_8093B60(objectEvent, sprite, DIR_SOUTHEAST);
-        return MovementAction_WalkSlowDiagonalDownRight_Step1(objectEvent, sprite);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_SOUTHEAST, 0);
-        return MovementAction_WalkNormalDiagonalUpLeft_Step1(objectEvent, sprite);
-    #endif
-}
-
-bool8 MovementAction_RunStairDiagonalUpLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_WEST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        StartSlowRunningAnim(objectEvent, sprite, DIR_NORTHWEST);
-    #else
-        StartRunningAnim(objectEvent, sprite, DIR_NORTHWEST);
-    #endif
-    return MovementAction_RunStairDiagonal_Step1(objectEvent, sprite);
-}
-
-bool8 MovementAction_RunStairDiagonalUpRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_EAST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        StartSlowRunningAnim(objectEvent, sprite, DIR_NORTHEAST);
-    #else
-        StartRunningAnim(objectEvent, sprite, DIR_NORTHEAST);
-    #endif
-    return MovementAction_RunStairDiagonal_Step1(objectEvent, sprite);
-}
-
-bool8 MovementAction_RunStairDiagonalDownLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_WEST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        StartSlowRunningAnim(objectEvent, sprite, DIR_SOUTHWEST);
-    #else
-        StartRunningAnim(objectEvent, sprite, DIR_SOUTHWEST);
-    #endif
-    return MovementAction_RunStairDiagonal_Step1(objectEvent, sprite);
-}
-
-bool8 MovementAction_RunStairDiagonalDownRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_EAST;
-    //objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        StartSlowRunningAnim(objectEvent, sprite, DIR_SOUTHEAST);
-    #else
-        StartRunningAnim(objectEvent, sprite, DIR_SOUTHEAST);
-    #endif
-    return MovementAction_RunStairDiagonal_Step1(objectEvent, sprite);
-}
-
-bool8 MovementAction_RunStairDiagonal_Step1(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    if (npc_obj_ministep_stop_on_arrival(objectEvent, sprite))
-    {
-        sprite->data[2] = 2;
-        return TRUE;
-    }
-    return FALSE;
-}
-
-bool8 MovementAction_AcroBikeDiagonalUpLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_WEST;
-    objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        do_go_anim(objectEvent, sprite, DIR_NORTHWEST, 0);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_NORTHWEST, 2);
-    #endif
-    return MovementAction_RideWaterCurrentLeft_Step1(objectEvent, sprite);
-}
-
-bool8 MovementAction_AcroBikeDiagonalDownLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_WEST;
-    objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        do_go_anim(objectEvent, sprite, DIR_SOUTHWEST, 0);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_SOUTHWEST, 2);
-    #endif
-    return MovementAction_RideWaterCurrentLeft_Step1(objectEvent, sprite);
-}
-
-bool8 MovementAction_AcroBikeDiagonalUpRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_EAST;
-    objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        do_go_anim(objectEvent, sprite, DIR_NORTHEAST, 0);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_NORTHEAST, 2);
-    #endif
-    return MovementAction_RideWaterCurrentRight_Step1(objectEvent, sprite);
-}
-
-bool8 MovementAction_AcroBikeDiagonalDownRight_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
-{
-    objectEvent->facingDirection = DIR_EAST;
-    objectEvent->facingDirectionLocked = TRUE;
-    #if SLOW_MOVEMENT_ON_STAIRS == TRUE
-        do_go_anim(objectEvent, sprite, DIR_SOUTHEAST, 0);
-    #else
-        do_go_anim(objectEvent, sprite, DIR_SOUTHEAST, 2);
-    #endif
-    return MovementAction_RideWaterCurrentRight_Step1(objectEvent, sprite);
-}
-

@@ -631,24 +631,6 @@ static void PlayerNotOnBikeMoving(u8 direction, u16 heldKeys)
             PlayerNotOnBikeCollideWithFarawayIslandMew(direction);
             return;
         }
-        /*
-        else if (collision == COLLISION_SIDEWAYS_STAIRS_TO_RIGHT)
-        {
-            if (heldKeys & B_BUTTON && FlagGet(FLAG_SYS_B_DASH))
-                PlayerSidewaysStairsRightSideRunning(direction);
-            else
-                PlayerSidewaysStairsRightSide(direction);
-            return;
-        }
-        else if (collision == COLLISION_SIDEWAYS_STAIRS_TO_LEFT)
-        {
-            if (heldKeys & B_BUTTON && FlagGet(FLAG_SYS_B_DASH))
-                return PlayerSidewaysStairsLeftSideRunning(direction);
-            else
-                return PlayerSidewaysStairsLeftSide(direction);
-            return;
-        }
-        */
         else
         {
             u8 adjustedCollision = collision - COLLISION_STOP_SURFING;
@@ -2304,22 +2286,3 @@ u8 GetLeftSideStairsDirection(u8 direction)
     }
 }
 
-void PlayerSidewaysStairsRightSide(u8 direction)
-{
-    PlayerSetAnimId(GetDiagonalRightStairsMovement(direction), 8);
-}
-
-void PlayerSidewaysStairsLeftSide(u8 direction)
-{
-    PlayerSetAnimId(GetDiagonalLeftStairsMovement(direction), 8);
-}
-
-void PlayerSidewaysStairsRightSideRunning(u8 direction)
-{
-    PlayerSetAnimId(GetDiagonalRightStairsRunningMovement(direction), 8);
-}
-
-void PlayerSidewaysStairsLeftSideRunning(u8 direction)
-{
-    PlayerSetAnimId(GetDiagonalLeftStairsRunningMovement(direction), 8);
-}
