@@ -212,7 +212,7 @@ void NewGameInitData(void)
     FlagSet(FLAG_SYS_B_DASH);
     AddBagItem(ITEM_MACH_BIKE, 1);
     AddBagItem(ITEM_ACRO_BIKE, 1);
-    gSaveBlock1Ptr->registeredItem = ITEM_ACRO_BIKE;
+    gSaveBlock1Ptr->registeredItem = ITEM_MACH_BIKE;
 
     memset(&gSaveBlock2Ptr->follower, 0, sizeof(gSaveBlock2Ptr->follower));
 }

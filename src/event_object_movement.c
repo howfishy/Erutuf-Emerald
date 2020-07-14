@@ -1139,6 +1139,10 @@ const u8 gRunSlowMovementActions[] = {
     [DIR_NORTH] = MOVEMENT_ACTION_RUN_UP_SLOW,
     [DIR_WEST]  = MOVEMENT_ACTION_RUN_LEFT_SLOW,
     [DIR_EAST]  = MOVEMENT_ACTION_RUN_RIGHT_SLOW,
+    [DIR_SOUTHWEST]  = MOVEMENT_ACTION_RUN_LEFT_SLOW,
+    [DIR_SOUTHEAST]  = MOVEMENT_ACTION_RUN_RIGHT_SLOW,
+    [DIR_NORTHWEST]  = MOVEMENT_ACTION_RUN_LEFT_SLOW,
+    [DIR_NORTHEAST]  = MOVEMENT_ACTION_RUN_RIGHT_SLOW,
 };
 
 const u8 gOppositeDirections[] = {
@@ -5134,11 +5138,33 @@ bool8 ObjectEventIsHeldMovementActive(struct ObjectEvent *objectEvent)
     return FALSE;
 }
 
+static u8 TryUpdateMovementActionOnStairs(struct ObjectEvent *objectEvent, u8 movementActionId)
+{
+    if (!ObjectMovingOnRockStairs(objectEvent, objectEvent->movementDirection))
+        return movementActionId;
+    
+    switch (movementActionId)
+    {
+        case MOVEMENT_ACTION_WALK_NORMAL_DOWN:
+            return MOVEMENT_ACTION_WALK_SLOW_DOWN;
+        case MOVEMENT_ACTION_WALK_NORMAL_UP:
+            return MOVEMENT_ACTION_WALK_SLOW_UP;
+        case MOVEMENT_ACTION_WALK_NORMAL_LEFT:
+            return MOVEMENT_ACTION_WALK_SLOW_LEFT;
+        case MOVEMENT_ACTION_WALK_NORMAL_RIGHT:
+            return MOVEMENT_ACTION_WALK_SLOW_RIGHT;
+        default:
+            return movementActionId;
+    }
+}
+
 bool8 ObjectEventSetHeldMovement(struct ObjectEvent *objectEvent, u8 movementActionId)
 {
     if (ObjectEventIsMovementOverridden(objectEvent))
         return TRUE;
-
+    
+    movementActionId = TryUpdateMovementActionOnStairs(objectEvent, movementActionId);
+    
     UnfreezeObjectEvent(objectEvent);
     objectEvent->movementActionId = movementActionId;
     objectEvent->heldMovementActive = TRUE;
@@ -5152,6 +5178,7 @@ bool8 ObjectEventSetHeldMovement(struct ObjectEvent *objectEvent, u8 movementAct
 
 void ObjectEventForceSetHeldMovement(struct ObjectEvent *objectEvent, u8 movementActionId)
 {
+    movementActionId = TryUpdateMovementActionOnStairs(objectEvent, movementActionId);
     ObjectEventClearHeldMovementIfActive(objectEvent);
     ObjectEventSetHeldMovement(objectEvent, movementActionId);
 }
@@ -5191,7 +5218,7 @@ u8 ObjectEventClearHeldMovementIfFinished(struct ObjectEvent *objectEvent)
 u8 ObjectEventGetHeldMovementActionId(struct ObjectEvent *objectEvent)
 {
     if (objectEvent->heldMovementActive)
-        return objectEvent->movementActionId;
+        return TryUpdateMovementActionOnStairs(objectEvent, objectEvent->movementActionId);
 
     return 0xFF;
 }
@@ -5296,6 +5323,8 @@ static u32 state_to_direction(u8 a0, u32 a1, u32 a2)
 
 static void ObjectEventExecHeldMovementAction(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
+    objectEvent->movementActionId = TryUpdateMovementActionOnStairs(objectEvent, objectEvent->movementActionId);
+    
     if (gMovementActionFuncs[objectEvent->movementActionId][sprite->data[2]](objectEvent, sprite))
     {
         objectEvent->heldMovementFinished = TRUE;
@@ -5304,6 +5333,8 @@ static void ObjectEventExecHeldMovementAction(struct ObjectEvent *objectEvent, s
 
 static bool8 ObjectEventExecSingleMovementAction(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
+    objectEvent->movementActionId = TryUpdateMovementActionOnStairs(objectEvent, objectEvent->movementActionId);
+    
     if (gMovementActionFuncs[objectEvent->movementActionId][sprite->data[2]](objectEvent, sprite))
     {
         objectEvent->movementActionId = 0xFF;
@@ -5314,8 +5345,8 @@ static bool8 ObjectEventExecSingleMovementAction(struct ObjectEvent *objectEvent
 }
 
 static void ObjectEventSetSingleMovement(struct ObjectEvent *objectEvent, struct Sprite *sprite, u8 animId)
-{
-    objectEvent->movementActionId = animId;
+{   
+    objectEvent->movementActionId = TryUpdateMovementActionOnStairs(objectEvent, animId);
     sprite->data[2] = 0;
 }
 
@@ -5666,7 +5697,8 @@ bool8 MovementAction_WalkNormalUp_Step1(struct ObjectEvent *objectEvent, struct 
 bool8 MovementAction_WalkNormalLeft_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
     if (objectEvent->directionOverwrite)
-        do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 0);
+        sub_8093B60(objectEvent, sprite, objectEvent->directionOverwrite);
+        //do_go_anim(objectEvent, sprite, objectEvent->directionOverwrite, 0);
     else
         do_go_anim(objectEvent, sprite, DIR_WEST, 0);
     return MovementAction_WalkNormalLeft_Step1(objectEvent, sprite);
@@ -9411,10 +9443,11 @@ bool8 MovementActionFunc_RunSlowRight_Step0(struct ObjectEvent *objectEvent, str
 
 bool8 MovementActionFunc_RunSlow_Step1(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    if (npc_obj_ministep_stop_on_arrival_slow(objectEvent, sprite))
+    if (npc_obj_ministep_stop_on_arrival(objectEvent, sprite))
     {
         sprite->data[2] = 2;
         return TRUE;
     }
     return FALSE;
 }
+
