@@ -70,6 +70,7 @@
 #define NATURE_SASSY    22
 #define NATURE_CAREFUL  23
 #define NATURE_QUIRKY   24
+#define NUM_NATURES     25
 
 // Pokemon Stats
 #define STAT_HP      0
@@ -81,7 +82,7 @@
 #define STAT_ACC     6 // Only in battles.
 #define STAT_EVASION 7 // Only in battles.
 
-#define NUM_EV_STATS     NUM_STATS - 1 // excludes HP
+#define NUM_NATURE_STATS NUM_STATS - 1 // excludes HP
 #define NUM_BATTLE_STATS NUM_STATS + 2 // includes Accuracy and Evasion
 
 // Shiny odds
@@ -292,7 +293,7 @@
 #define EVO_ITEM_FEMALE      0x001B // specified item is used on a female Pokémon
 #define EVO_LEVEL_RAIN       0x001C // Pokémon reaches the specified level while it's raining
 #define EVO_SPECIFIC_MON_IN_PARTY  0x001D // Pokémon levels up with a specified Pokémon in party
-#define EVO_LEVEL_SPECIFIC_MON_TYPE_IN_PARTY  0x001E // Pokémon reaches the specified level with a specified Pokémon in party
+#define EVO_LEVEL_DARK_TYPE_MON_IN_PARTY  0x001E // Pokémon reaches the specified level with a Dark Type Pokémon in party
 
 #define EVOS_PER_MON 8
 

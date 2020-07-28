@@ -301,14 +301,14 @@ SecretBase_EventScript_PutAwayDecoration:: @ 8275D2E
 	end
 
 SecretBase_EventScript_PutAwayDecorationLoop:: @ 8275D39
-	special sub_8129708
+	special PutAwayDecorationIteration
 	compare VAR_RESULT, 1
 	goto_if_eq SecretBase_EventScript_PutAwayDecorationEnd
 	addvar VAR_0x8004, 1
 	compare VAR_0x8005, 0
 	goto_if_eq SecretBase_EventScript_PutAwayDecorationLoop
 	removeobject VAR_0x8006
-	setflag 0x8005  @ UB: GF likely meant setvar here; setflag 0x8005 is out of bounds
+	setflag VAR_0x8005  @ UB: GF likely meant setvar here; setflag 0x8005 is out of bounds
 	goto SecretBase_EventScript_PutAwayDecorationLoop
 	end
 

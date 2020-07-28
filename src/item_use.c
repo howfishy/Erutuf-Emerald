@@ -38,11 +38,9 @@
 #include "text.h"
 #include "constants/event_bg.h"
 #include "constants/event_objects.h"
-#include "constants/flags.h"
 #include "constants/item_effects.h"
 #include "constants/items.h"
 #include "constants/songs.h"
-#include "constants/vars.h"
 
 static void SetUpItemUseCallback(u8 taskId);
 static void FieldCB_UseItemOnField(void);
@@ -107,7 +105,7 @@ static void SetUpItemUseCallback(u8 taskId)
         type = ItemId_GetType(gSpecialVar_ItemId) - 1;
     if (!InBattlePyramid())
     {
-        gBagMenu->mainCallback2 = sItemUseCallbacks[type];
+        gBagMenu->exitCallback = sItemUseCallbacks[type];
         Task_FadeAndCloseBagMenu(taskId);
     }
     else
@@ -192,7 +190,7 @@ static void CB2_CheckMail(void)
 
 void ItemUseOutOfBattle_Mail(u8 taskId)
 {
-    gBagMenu->mainCallback2 = CB2_CheckMail;
+    gBagMenu->exitCallback = CB2_CheckMail;
     Task_FadeAndCloseBagMenu(taskId);
 }
 
@@ -221,9 +219,9 @@ void ItemUseOutOfBattle_Bike(u8 taskId)
 static void ItemUseOnFieldCB_Bike(u8 taskId)
 {
     if (!ItemId_GetSecondaryId(gSpecialVar_ItemId))
-        GetOnOffBike(2);
+        GetOnOffBike(PLAYER_AVATAR_FLAG_MACH_BIKE);
     else
-        GetOnOffBike(4);
+        GetOnOffBike(PLAYER_AVATAR_FLAG_ACRO_BIKE);
     ScriptUnfreezeObjectEvents();
     ScriptContext2_Disable();
     DestroyTask(taskId);
@@ -611,13 +609,13 @@ static void Task_StandingOnHiddenItem(u8 taskId)
 
 void ItemUseOutOfBattle_PokeblockCase(u8 taskId)
 {
-    if (sub_81221AC() == TRUE) // link func
+    if (MenuHelpers_LinkSomething() == TRUE) // link func
     {
         DisplayDadsAdviceCannotUseItemMessage(taskId, gTasks[taskId].tUsingRegisteredKeyItem);
     }
     else if (gTasks[taskId].tUsingRegisteredKeyItem != TRUE)
     {
-        gBagMenu->mainCallback2 = CB2_OpenPokeblockCaseOnField;
+        gBagMenu->exitCallback = CB2_OpenPokeblockCaseOnField;
         Task_FadeAndCloseBagMenu(taskId);
     }
     else
@@ -679,7 +677,7 @@ void ItemUseOutOfBattle_Berry(u8 taskId)
     {
         sItemUseOnFieldCB = ItemUseOnFieldCB_Berry;
         gFieldCallback = FieldCB_UseItemOnField;
-        gBagMenu->mainCallback2 = CB2_ReturnToField;
+        gBagMenu->exitCallback = CB2_ReturnToField;
         Task_FadeAndCloseBagMenu(taskId);
     }
     else
@@ -911,9 +909,9 @@ static void ItemUseOnFieldCB_EscapeRope(u8 taskId)
     DisplayItemMessageOnField(taskId, gStringVar4, Task_UseDigEscapeRopeOnField);
 }
 
-bool8 CanUseEscapeRopeOnCurrMap(void)
+bool8 CanUseDigOrEscapeRopeOnCurMap(void)
 {
-    if (gMapHeader.flags & MAP_ALLOW_ESCAPE_ROPE)
+    if (gMapHeader.flags & MAP_ALLOW_ESCAPING)
         return TRUE;
     else
         return FALSE;
@@ -921,7 +919,7 @@ bool8 CanUseEscapeRopeOnCurrMap(void)
 
 void ItemUseOutOfBattle_EscapeRope(u8 taskId)
 {
-    if (CanUseEscapeRopeOnCurrMap() == TRUE)
+    if (CanUseDigOrEscapeRopeOnCurMap() == TRUE)
     {
         sItemUseOnFieldCB = ItemUseOnFieldCB_EscapeRope;
         SetUpItemUseOnFieldCallback(taskId);
@@ -1003,7 +1001,7 @@ static void ItemUseInBattle_ShowPartyMenu(u8 taskId)
 {
     if (!InBattlePyramid())
     {
-        gBagMenu->mainCallback2 = ChooseMonForInBattleItem;
+        gBagMenu->exitCallback = ChooseMonForInBattleItem;
         Task_FadeAndCloseBagMenu(taskId);
     }
     else

@@ -1122,6 +1122,7 @@ const u16 gSpeciesToNationalPokedexNum[NUM_SPECIES] = // Assigns all species to 
 	SPECIES_TO_NATIONAL(TURTONATOR),
 	SPECIES_TO_NATIONAL(TOGEDEMARU),
 	SPECIES_TO_NATIONAL(MIMIKYU),
+	[SPECIES_MIMIKYU_BUSTED - 1] = NATIONAL_DEX_MIMIKYU,
 	SPECIES_TO_NATIONAL(BRUXISH),
 	SPECIES_TO_NATIONAL(DRAMPA),
 	SPECIES_TO_NATIONAL(DHELMISE),
@@ -1380,7 +1381,7 @@ const struct SpindaSpot gSpindaSpotGraphics[] =
 
 #include "data/pokemon/item_effects.h"
 
-const s8 gNatureStatTable[][NUM_EV_STATS] =
+const s8 gNatureStatTable[NUM_NATURES][NUM_NATURE_STATS] =
 {
     // Atk Def Spd Sp.Atk Sp.Def
     {    0,  0,  0,     0,     0}, // Hardy
@@ -3012,7 +3013,7 @@ void SetDeoxysStats(void)
     }
 }
 
-u16 sub_8068B48(void)
+u16 GetUnionRoomTrainerPic(void)
 {
     u8 linkId;
     u32 arrId;
@@ -3027,7 +3028,7 @@ u16 sub_8068B48(void)
     return FacilityClassToPicIndex(gLinkPlayerFacilityClasses[arrId]);
 }
 
-u16 sub_8068BB0(void)
+u16 GetUnionRoomTrainerClass(void)
 {
     u8 linkId;
     u32 arrId;
@@ -3513,7 +3514,7 @@ s32 CalculateBaseDamage(struct BattlePokemon *attacker, struct BattlePokemon *de
                 damage /= 2;
         }
 
-        if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE) && gBattleMoves[move].target == 8 && CountAliveMonsInBattle(BATTLE_ALIVE_DEF_SIDE) == 2)
+        if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE) && gBattleMoves[move].target == MOVE_TARGET_BOTH && CountAliveMonsInBattle(BATTLE_ALIVE_DEF_SIDE) == 2)
             damage /= 2;
 
         // moves always do at least 1 damage.
@@ -3560,7 +3561,7 @@ s32 CalculateBaseDamage(struct BattlePokemon *attacker, struct BattlePokemon *de
                 damage /= 2;
         }
 
-        if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE) && gBattleMoves[move].target == 8 && CountAliveMonsInBattle(BATTLE_ALIVE_DEF_SIDE) == 2)
+        if ((gBattleTypeFlags & BATTLE_TYPE_DOUBLE) && gBattleMoves[move].target == MOVE_TARGET_BOTH && CountAliveMonsInBattle(BATTLE_ALIVE_DEF_SIDE) == 2)
             damage /= 2;
 
         // are effects of weather negated with cloud nine or air lock
@@ -4678,7 +4679,7 @@ u8 CalculatePlayerPartyCount(void)
 {
     gPlayerPartyCount = 0;
 
-    while (gPlayerPartyCount < 6
+    while (gPlayerPartyCount < PARTY_SIZE
         && GetMonData(&gPlayerParty[gPlayerPartyCount], MON_DATA_SPECIES, NULL) != SPECIES_NONE)
     {
         gPlayerPartyCount++;
@@ -4691,7 +4692,7 @@ u8 CalculateEnemyPartyCount(void)
 {
     gEnemyPartyCount = 0;
 
-    while (gEnemyPartyCount < 6
+    while (gEnemyPartyCount < PARTY_SIZE
         && GetMonData(&gEnemyParty[gEnemyPartyCount], MON_DATA_SPECIES, NULL) != SPECIES_NONE)
     {
         gEnemyPartyCount++;
@@ -4780,7 +4781,7 @@ void CreateSecretBaseEnemyParty(struct SecretBase *secretBaseRecord)
 
             SetMonData(&gEnemyParty[i], MON_DATA_HELD_ITEM, &gBattleResources->secretBase->party.heldItems[i]);
 
-            for (j = 0; j < 6; j++)
+            for (j = 0; j < NUM_STATS; j++)
                 SetMonData(&gEnemyParty[i], MON_DATA_HP_EV + j, &gBattleResources->secretBase->party.EVs[i]);
 
             for (j = 0; j < MAX_MON_MOVES; j++)
@@ -5657,12 +5658,12 @@ u8 *UseStatIncreaseItem(u16 itemId)
 
 u8 GetNature(struct Pokemon *mon)
 {
-    return GetMonData(mon, MON_DATA_PERSONALITY, 0) % 25;
+    return GetMonData(mon, MON_DATA_PERSONALITY, 0) % NUM_NATURES;
 }
 
 u8 GetNatureFromPersonality(u32 personality)
 {
-    return personality % 25;
+    return personality % NUM_NATURES;
 }
 
 u16 GetEvolutionTargetSpecies(struct Pokemon *mon, u8 type, u16 evolutionItem)
@@ -5810,14 +5811,14 @@ u16 GetEvolutionTargetSpecies(struct Pokemon *mon, u8 type, u16 evolutionItem)
                     }
                 }
                 break;
-            case EVO_LEVEL_SPECIFIC_MON_TYPE_IN_PARTY:
+            case EVO_LEVEL_DARK_TYPE_MON_IN_PARTY:
                 if (gEvolutionTable[species][i].param <= level)
                 {
                     for (j = 0; j < PARTY_SIZE; j++)
                     {
                         u16 species = GetMonData(&gPlayerParty[j], MON_DATA_SPECIES, NULL);
-                        if (gBaseStats[species].type1 == gEvolutionTable[species][i].param
-                            || gBaseStats[species].type2 == gEvolutionTable[species][i].param)
+                        if (gBaseStats[species].type1 == TYPE_DARK
+                            || gBaseStats[species].type2 == TYPE_DARK)
                         {
                             targetSpecies = gEvolutionTable[species][i].targetSpecies;
                             break;
@@ -6119,7 +6120,7 @@ u8 GetTrainerEncounterMusicId(u16 trainerOpponentId)
 u16 ModifyStatByNature(u8 nature, u16 n, u8 statIndex)
 {
     // Dont modify HP, Accuracy, or Evasion by nature
-    if (statIndex <= STAT_HP || statIndex > NUM_EV_STATS)
+    if (statIndex <= STAT_HP || statIndex > NUM_NATURE_STATS)
     {
         // Should just be "return n", but it wouldn't match without this.
         u16 retVal = n;
@@ -6208,7 +6209,7 @@ void MonGainEVs(struct Pokemon *mon, u16 defeatedSpecies)
     u16 totalEVs = 0;
     u16 heldItem;
     u8 holdEffect;
-    int i;
+    int i, multiplier;
 
     for (i = 0; i < NUM_STATS; i++)
     {
@@ -6218,43 +6219,37 @@ void MonGainEVs(struct Pokemon *mon, u16 defeatedSpecies)
 
     for (i = 0; i < NUM_STATS; i++)
     {
-        u8 hasHadPokerus;
-        int multiplier;
-
         if (totalEVs >= MAX_TOTAL_EVS)
             break;
-
-        hasHadPokerus = CheckPartyHasHadPokerus(mon, 0);
-
-        if (hasHadPokerus)
+        
+        if (CheckPartyHasHadPokerus(mon, 0))
             multiplier = 2;
         else
             multiplier = 1;
 
         switch (i)
         {
-        case 0:
+        case STAT_HP:
             evIncrease = gBaseStats[defeatedSpecies].evYield_HP * multiplier;
             break;
-        case 1:
+        case STAT_ATK:
             evIncrease = gBaseStats[defeatedSpecies].evYield_Attack * multiplier;
             break;
-        case 2:
+        case STAT_DEF:
             evIncrease = gBaseStats[defeatedSpecies].evYield_Defense * multiplier;
             break;
-        case 3:
+        case STAT_SPEED:
             evIncrease = gBaseStats[defeatedSpecies].evYield_Speed * multiplier;
             break;
-        case 4:
+        case STAT_SPATK:
             evIncrease = gBaseStats[defeatedSpecies].evYield_SpAttack * multiplier;
             break;
-        case 5:
+        case STAT_SPDEF:
             evIncrease = gBaseStats[defeatedSpecies].evYield_SpDefense * multiplier;
             break;
         }
 
         heldItem = GetMonData(mon, MON_DATA_HELD_ITEM, 0);
-
         if (heldItem == ITEM_ENIGMA_BERRY)
         {
             if (gMain.inBattle)
@@ -6782,13 +6777,13 @@ bool8 IsMonSpriteNotFlipped(u16 species)
 s8 GetMonFlavorRelation(struct Pokemon *mon, u8 flavor)
 {
     u8 nature = GetNature(mon);
-    return gPokeblockFlavorCompatibilityTable[nature * 5 + flavor];
+    return gPokeblockFlavorCompatibilityTable[nature * FLAVOR_COUNT + flavor];
 }
 
 s8 GetFlavorRelationByPersonality(u32 personality, u8 flavor)
 {
     u8 nature = GetNatureFromPersonality(personality);
-    return gPokeblockFlavorCompatibilityTable[nature * 5 + flavor];
+    return gPokeblockFlavorCompatibilityTable[nature * FLAVOR_COUNT + flavor];
 }
 
 bool8 IsTradedMon(struct Pokemon *mon)
