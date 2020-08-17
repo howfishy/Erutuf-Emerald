@@ -5140,7 +5140,7 @@ bool8 ObjectEventIsHeldMovementActive(struct ObjectEvent *objectEvent)
 
 static u8 TryUpdateMovementActionOnStairs(struct ObjectEvent *objectEvent, u8 movementActionId)
 {
-    if (objectEvent->isPlayer)
+    if (objectEvent->isPlayer || objectEvent->localId == GetFollowerLocalId())
         return movementActionId;    //handled separately
     
     if (!ObjectMovingOnRockStairs(objectEvent, objectEvent->movementDirection))

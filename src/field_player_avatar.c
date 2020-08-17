@@ -2284,6 +2284,9 @@ bool8 ObjectMovingOnRockStairs(struct ObjectEvent *objectEvent, u8 direction)
         s16 x = objectEvent->currentCoords.x;
         s16 y = objectEvent->currentCoords.y;
         
+        if (PlayerHasFollower())
+            return FALSE;   //makes follower movement on stairs cleaner
+        
         switch (direction)
         {
         case DIR_NORTH:
