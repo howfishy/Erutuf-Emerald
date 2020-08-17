@@ -1606,6 +1606,11 @@
 	.2byte \item
 	.2byte \quantity
 	.endm
+    
+    .macro casinopokemart pointer:req
+    .byte 0xe3
+    .4byte \pointer
+    .endm
 
 
 @ Supplementary
