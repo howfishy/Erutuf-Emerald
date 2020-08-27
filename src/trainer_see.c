@@ -21,7 +21,7 @@
 #include "constants/trainer_types.h"
 
 extern const struct SpritePalette sObjectEventSpritePalettes[];
-extern const struct SpritePalette gFieldEffectObjectPaletteInfo0;
+extern const struct SpritePalette gSpritePalette_GeneralFieldEffect0;
 
 // this file's functions
 static u8 CheckTrainer(u8 objectEventId);
@@ -563,7 +563,7 @@ static bool8 PopOutOfAshHiddenTrainer(u8 taskId, struct Task *task, struct Objec
         gFieldEffectArguments[1] = trainerObj->currentCoords.y;
         gFieldEffectArguments[2] = gSprites[trainerObj->spriteId].subpriority - 1;
         gFieldEffectArguments[3] = 2;
-        task->tOutOfAshSpriteId = FieldEffectStart(FLDEFF_POP_OUT_OF_ASH);
+        task->tOutOfAshSpriteId = FieldEffectStart(FLDEFF_ASH_PUFF);
         task->tFuncId++;
     }
     return FALSE;
@@ -590,7 +590,7 @@ static bool8 JumpInPlaceHiddenTrainer(u8 taskId, struct Task *task, struct Objec
 
 static bool8 WaitRevealHiddenTrainer(u8 taskId, struct Task *task, struct ObjectEvent *trainerObj)
 {
-    if (!FieldEffectActiveListContains(FLDEFF_POP_OUT_OF_ASH))
+    if (!FieldEffectActiveListContains(FLDEFF_ASH_PUFF))
         task->tFuncId = 3;
 
     return FALSE;
@@ -607,14 +607,14 @@ static void sub_80B44C8(u8 taskId)
     struct ObjectEvent *objEvent;
 
     // another objEvent loaded into by loadword?
-    LoadWordFromTwoHalfwords(&task->data[1], (u32 *)&objEvent);
+    LoadWordFromTwoHalfwords((u16*)&task->data[1], (u32 *)&objEvent);
     if (!task->data[7])
     {
         ObjectEventClearHeldMovement(objEvent);
         task->data[7]++;
     }
     sTrainerSeeFuncList2[task->data[0]](taskId, task, objEvent);
-    if (task->data[0] == 3 && !FieldEffectActiveListContains(FLDEFF_POP_OUT_OF_ASH))
+    if (task->data[0] == 3 && !FieldEffectActiveListContains(FLDEFF_ASH_PUFF))
     {
         SetTrainerMovementType(objEvent, GetTrainerFacingDirectionMovementType(objEvent->facingDirection));
         TryOverrideTemplateCoordsForObjectEvent(objEvent, GetTrainerFacingDirectionMovementType(objEvent->facingDirection));
@@ -628,7 +628,7 @@ static void sub_80B44C8(u8 taskId)
 
 void sub_80B4578(struct ObjectEvent *var)
 {
-    StoreWordInTwoHalfwords(&gTasks[CreateTask(sub_80B44C8, 0)].data[1], (u32)var);
+    StoreWordInTwoHalfwords((u16 *)&gTasks[CreateTask(sub_80B44C8, 0)].data[1], (u32)var);
 }
 
 void EndTrainerApproach(void)
@@ -674,7 +674,7 @@ void TryPrepareSecondApproachingTrainer(void)
 
 u8 FldEff_ExclamationMarkIcon(void)
 {
-    u8 spriteId, paletteNum;
+    u8 spriteId;
 
     LoadObjectEventPalette(0x1100);
     UpdatePaletteGammaType(IndexOfSpritePaletteTag(0x1100), GAMMA_ALT);
@@ -706,7 +706,7 @@ u8 FldEff_HeartIcon(void)
 {
     u8 spriteId;
 
-    LoadSpritePalette(&gFieldEffectObjectPaletteInfo0);
+    LoadSpritePalette(&gSpritePalette_GeneralFieldEffect0);
     UpdatePaletteGammaType(IndexOfSpritePaletteTag(0x1004), GAMMA_ALT);
     UpdateSpritePaletteWithWeather(IndexOfSpritePaletteTag(0x1004));
     spriteId = CreateSpriteAtEnd(&sSpriteTemplate_HeartIcon, 0, 0, 0x52);

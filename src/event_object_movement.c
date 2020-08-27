@@ -29,6 +29,7 @@
 #include "constants/items.h"
 #include "constants/mauville_old_man.h"
 #include "constants/trainer_types.h"
+#include "constants/union_room.h"
 
 // this file was known as evobjmv.c in Game Freak's original source
 
@@ -96,7 +97,7 @@ static void DoRippleFieldEffect(struct ObjectEvent*, struct Sprite*);
 static void DoGroundEffects_OnSpawn(struct ObjectEvent*, struct Sprite*);
 static void DoGroundEffects_OnBeginStep(struct ObjectEvent*, struct Sprite*);
 static void DoGroundEffects_OnFinishStep(struct ObjectEvent*, struct Sprite*);
-static void sub_8097D68(struct Sprite*);
+static void UpdateObjectEventSpritePosition(struct Sprite*);
 static void ApplyLevitateMovement(u8);
 static bool8 MovementType_Disguise_Callback(struct ObjectEvent *, struct Sprite *);
 static bool8 MovementType_Hidden_Callback(struct ObjectEvent *, struct Sprite *);
@@ -128,6 +129,9 @@ static void ClearObjectEventMovement(struct ObjectEvent *, struct Sprite *);
 static void ObjectEventSetSingleMovement(struct ObjectEvent *, struct Sprite *, u8);
 static void oamt_npc_ministep_reset(struct Sprite *, u8, u8);
 static void UpdateObjectEventSpriteSubpriorityAndVisibility(struct Sprite *);
+static void InitSpriteForFigure8Anim(struct Sprite *sprite);
+static bool8 AnimateSpriteInFigure8(struct Sprite *sprite);
+static void UpdateObjectEventSprite(struct Sprite *);
 
 const struct SpriteTemplate gCameraSpriteTemplate = {0, 0xFFFF, &gDummyOamData, gDummySpriteAnimTable, NULL, gDummySpriteAffineAnimTable, ObjectCB_CameraObject};
 
@@ -393,92 +397,92 @@ const u8 gInitialMovementTypeFacingDirections[] = {
     [MOVEMENT_TYPE_WALK_SLOWLY_IN_PLACE_RIGHT] = DIR_EAST,
 };
 
-#define EVENT_OBJ_PAL_TAG_0  0x1103
-#define EVENT_OBJ_PAL_TAG_1  0x1104
-#define EVENT_OBJ_PAL_TAG_2  0x1105
-#define EVENT_OBJ_PAL_TAG_3  0x1106
-#define EVENT_OBJ_PAL_TAG_4  0x1107
-#define EVENT_OBJ_PAL_TAG_5  0x1108
-#define EVENT_OBJ_PAL_TAG_6  0x1109
-#define EVENT_OBJ_PAL_TAG_7  0x110A
-#define EVENT_OBJ_PAL_TAG_8  0x1100
-#define EVENT_OBJ_PAL_TAG_9  0x1101
-#define EVENT_OBJ_PAL_TAG_10 0x1102
-#define EVENT_OBJ_PAL_TAG_11 0x1115
-#define EVENT_OBJ_PAL_TAG_12 0x110B
-#define EVENT_OBJ_PAL_TAG_13 0x110C
-#define EVENT_OBJ_PAL_TAG_14 0x110D
-#define EVENT_OBJ_PAL_TAG_15 0x110E
-#define EVENT_OBJ_PAL_TAG_16 0x110F
-#define EVENT_OBJ_PAL_TAG_17 0x1110
-#define EVENT_OBJ_PAL_TAG_18 0x1111
-#define EVENT_OBJ_PAL_TAG_19 0x1112
-#define EVENT_OBJ_PAL_TAG_20 0x1113
-#define EVENT_OBJ_PAL_TAG_21 0x1114
-#define EVENT_OBJ_PAL_TAG_22 0x1116
-#define EVENT_OBJ_PAL_TAG_23 0x1117
-#define EVENT_OBJ_PAL_TAG_24 0x1118
-#define EVENT_OBJ_PAL_TAG_25 0x1119
-#define EVENT_OBJ_PAL_TAG_26 0x111B
-#define EVENT_OBJ_PAL_TAG_27 0x111C
-#define EVENT_OBJ_PAL_TAG_28 0x111D
-#define EVENT_OBJ_PAL_TAG_29 0x111E
-#define EVENT_OBJ_PAL_TAG_30 0x111F
-#define EVENT_OBJ_PAL_TAG_31 0x1120
-#define EVENT_OBJ_PAL_TAG_32 0x1121
-#define EVENT_OBJ_PAL_TAG_33 0x1122
-#define EVENT_OBJ_PAL_TAG_34 0x1123
-#define EVENT_OBJ_PAL_TAG_NONE 0x11FF
+#define OBJ_EVENT_PAL_TAG_0  0x1103
+#define OBJ_EVENT_PAL_TAG_1  0x1104
+#define OBJ_EVENT_PAL_TAG_2  0x1105
+#define OBJ_EVENT_PAL_TAG_3  0x1106
+#define OBJ_EVENT_PAL_TAG_4  0x1107
+#define OBJ_EVENT_PAL_TAG_5  0x1108
+#define OBJ_EVENT_PAL_TAG_6  0x1109
+#define OBJ_EVENT_PAL_TAG_7  0x110A
+#define OBJ_EVENT_PAL_TAG_8  0x1100
+#define OBJ_EVENT_PAL_TAG_9  0x1101
+#define OBJ_EVENT_PAL_TAG_10 0x1102
+#define OBJ_EVENT_PAL_TAG_11 0x1115
+#define OBJ_EVENT_PAL_TAG_12 0x110B
+#define OBJ_EVENT_PAL_TAG_13 0x110C
+#define OBJ_EVENT_PAL_TAG_14 0x110D
+#define OBJ_EVENT_PAL_TAG_15 0x110E
+#define OBJ_EVENT_PAL_TAG_16 0x110F
+#define OBJ_EVENT_PAL_TAG_17 0x1110
+#define OBJ_EVENT_PAL_TAG_18 0x1111
+#define OBJ_EVENT_PAL_TAG_19 0x1112
+#define OBJ_EVENT_PAL_TAG_20 0x1113
+#define OBJ_EVENT_PAL_TAG_21 0x1114
+#define OBJ_EVENT_PAL_TAG_22 0x1116
+#define OBJ_EVENT_PAL_TAG_23 0x1117
+#define OBJ_EVENT_PAL_TAG_24 0x1118
+#define OBJ_EVENT_PAL_TAG_25 0x1119
+#define OBJ_EVENT_PAL_TAG_26 0x111B
+#define OBJ_EVENT_PAL_TAG_27 0x111C
+#define OBJ_EVENT_PAL_TAG_28 0x111D
+#define OBJ_EVENT_PAL_TAG_29 0x111E
+#define OBJ_EVENT_PAL_TAG_30 0x111F
+#define OBJ_EVENT_PAL_TAG_31 0x1120
+#define OBJ_EVENT_PAL_TAG_32 0x1121
+#define OBJ_EVENT_PAL_TAG_33 0x1122
+#define OBJ_EVENT_PAL_TAG_34 0x1123
+#define OBJ_EVENT_PAL_TAG_NONE 0x11FF
 
-#include "data/field_event_obj/field_effect_object_template_pointers.h"
-#include "data/field_event_obj/event_object_pic_tables.h"
-#include "data/field_event_obj/event_object_anims.h"
-#include "data/field_event_obj/base_oam.h"
-#include "data/field_event_obj/event_object_subsprites.h"
-#include "data/field_event_obj/event_object_graphics_info.h"
-#include "data/field_event_obj/event_object_graphics_info_pointers.h"
+#include "data/object_events/object_event_graphics_info_pointers.h"
+#include "data/field_effects/field_effect_object_template_pointers.h"
+#include "data/object_events/object_event_pic_tables.h"
+#include "data/object_events/object_event_anims.h"
+#include "data/object_events/base_oam.h"
+#include "data/object_events/object_event_subsprites.h"
+#include "data/object_events/object_event_graphics_info.h"
 
 const struct SpritePalette sObjectEventSpritePalettes[] = {
-    {gObjectEventPalette0,  EVENT_OBJ_PAL_TAG_0},
-    {gObjectEventPalette1,  EVENT_OBJ_PAL_TAG_1},
-    {gObjectEventPalette2,  EVENT_OBJ_PAL_TAG_2},
-    {gObjectEventPalette3,  EVENT_OBJ_PAL_TAG_3},
-    {gObjectEventPalette4,  EVENT_OBJ_PAL_TAG_4},
-    {gObjectEventPalette5,  EVENT_OBJ_PAL_TAG_5},
-    {gObjectEventPalette6,  EVENT_OBJ_PAL_TAG_6},
-    {gObjectEventPalette7,  EVENT_OBJ_PAL_TAG_7},
-    {gObjectEventPalette8,  EVENT_OBJ_PAL_TAG_8},
-    {gObjectEventPalette9,  EVENT_OBJ_PAL_TAG_9},
-    {gObjectEventPalette10, EVENT_OBJ_PAL_TAG_10},
-    {gObjectEventPalette11, EVENT_OBJ_PAL_TAG_11},
-    {gObjectEventPalette12, EVENT_OBJ_PAL_TAG_12},
-    {gObjectEventPalette13, EVENT_OBJ_PAL_TAG_13},
-    {gObjectEventPalette14, EVENT_OBJ_PAL_TAG_14},
-    {gObjectEventPalette15, EVENT_OBJ_PAL_TAG_15},
-    {gObjectEventPalette16, EVENT_OBJ_PAL_TAG_16},
-    {gObjectEventPalette17, EVENT_OBJ_PAL_TAG_17},
-    {gObjectEventPalette18, EVENT_OBJ_PAL_TAG_18},
-    {gObjectEventPalette19, EVENT_OBJ_PAL_TAG_19},
-    {gObjectEventPalette20, EVENT_OBJ_PAL_TAG_20},
-    {gObjectEventPalette21, EVENT_OBJ_PAL_TAG_21},
-    {gObjectEventPalette22, EVENT_OBJ_PAL_TAG_22},
-    {gObjectEventPalette23, EVENT_OBJ_PAL_TAG_23},
-    {gObjectEventPalette24, EVENT_OBJ_PAL_TAG_24},
-    {gObjectEventPalette25, EVENT_OBJ_PAL_TAG_25},
-    {gObjectEventPalette26, EVENT_OBJ_PAL_TAG_26},
-    {gObjectEventPalette27, EVENT_OBJ_PAL_TAG_27},
-    {gObjectEventPalette28, EVENT_OBJ_PAL_TAG_28},
-    {gObjectEventPalette29, EVENT_OBJ_PAL_TAG_29},
-    {gObjectEventPalette30, EVENT_OBJ_PAL_TAG_30},
-    {gObjectEventPalette31, EVENT_OBJ_PAL_TAG_31},
-    {gObjectEventPalette32, EVENT_OBJ_PAL_TAG_32},
-    {gObjectEventPalette33, EVENT_OBJ_PAL_TAG_33},
-    {gObjectEventPalette34, EVENT_OBJ_PAL_TAG_34},
+    {gObjectEventPalette0,  OBJ_EVENT_PAL_TAG_0},
+    {gObjectEventPalette1,  OBJ_EVENT_PAL_TAG_1},
+    {gObjectEventPalette2,  OBJ_EVENT_PAL_TAG_2},
+    {gObjectEventPalette3,  OBJ_EVENT_PAL_TAG_3},
+    {gObjectEventPalette4,  OBJ_EVENT_PAL_TAG_4},
+    {gObjectEventPalette5,  OBJ_EVENT_PAL_TAG_5},
+    {gObjectEventPalette6,  OBJ_EVENT_PAL_TAG_6},
+    {gObjectEventPalette7,  OBJ_EVENT_PAL_TAG_7},
+    {gObjectEventPalette8,  OBJ_EVENT_PAL_TAG_8},
+    {gObjectEventPalette9,  OBJ_EVENT_PAL_TAG_9},
+    {gObjectEventPalette10, OBJ_EVENT_PAL_TAG_10},
+    {gObjectEventPalette11, OBJ_EVENT_PAL_TAG_11},
+    {gObjectEventPalette12, OBJ_EVENT_PAL_TAG_12},
+    {gObjectEventPalette13, OBJ_EVENT_PAL_TAG_13},
+    {gObjectEventPalette14, OBJ_EVENT_PAL_TAG_14},
+    {gObjectEventPalette15, OBJ_EVENT_PAL_TAG_15},
+    {gObjectEventPalette16, OBJ_EVENT_PAL_TAG_16},
+    {gObjectEventPalette17, OBJ_EVENT_PAL_TAG_17},
+    {gObjectEventPalette18, OBJ_EVENT_PAL_TAG_18},
+    {gObjectEventPalette19, OBJ_EVENT_PAL_TAG_19},
+    {gObjectEventPalette20, OBJ_EVENT_PAL_TAG_20},
+    {gObjectEventPalette21, OBJ_EVENT_PAL_TAG_21},
+    {gObjectEventPalette22, OBJ_EVENT_PAL_TAG_22},
+    {gObjectEventPalette23, OBJ_EVENT_PAL_TAG_23},
+    {gObjectEventPalette24, OBJ_EVENT_PAL_TAG_24},
+    {gObjectEventPalette25, OBJ_EVENT_PAL_TAG_25},
+    {gObjectEventPalette26, OBJ_EVENT_PAL_TAG_26},
+    {gObjectEventPalette27, OBJ_EVENT_PAL_TAG_27},
+    {gObjectEventPalette28, OBJ_EVENT_PAL_TAG_28},
+    {gObjectEventPalette29, OBJ_EVENT_PAL_TAG_29},
+    {gObjectEventPalette30, OBJ_EVENT_PAL_TAG_30},
+    {gObjectEventPalette31, OBJ_EVENT_PAL_TAG_31},
+    {gObjectEventPalette32, OBJ_EVENT_PAL_TAG_32},
+    {gObjectEventPalette33, OBJ_EVENT_PAL_TAG_33},
+    {gObjectEventPalette34, OBJ_EVENT_PAL_TAG_34},
     {NULL,                  0x0000},
 };
 
-#include "data/field_event_obj/berry_tree_graphics_tables.h"
-#include "data/field_event_obj/field_effect_objects.h"
+#include "data/object_events/berry_tree_graphics_tables.h"
+#include "data/field_effects/field_effect_objects.h"
 
 const s16 gMovementDelaysMedium[] = {32, 64,  96, 128};
 const s16 gMovementDelaysLong[] =   {32, 64, 128, 192};
@@ -936,13 +940,13 @@ void ResetObjectEvents(void)
 
 static void CreateReflectionEffectSprites(void)
 {
-    u8 spriteId = CreateSpriteAtEnd(gFieldEffectObjectTemplatePointers[21], 0, 0, 31);
+    u8 spriteId = CreateSpriteAtEnd(gFieldEffectObjectTemplatePointers[FLDEFFOBJ_REFLECTION_DISTORTION], 0, 0, 31);
     gSprites[spriteId].oam.affineMode = ST_OAM_AFFINE_NORMAL;
     InitSpriteAffineAnim(&gSprites[spriteId]);
     StartSpriteAffineAnim(&gSprites[spriteId], 0);
     gSprites[spriteId].invisible = TRUE;
 
-    spriteId = CreateSpriteAtEnd(gFieldEffectObjectTemplatePointers[21], 0, 0, 31);
+    spriteId = CreateSpriteAtEnd(gFieldEffectObjectTemplatePointers[FLDEFFOBJ_REFLECTION_DISTORTION], 0, 0, 31);
     gSprites[spriteId].oam.affineMode = ST_OAM_AFFINE_NORMAL;
     InitSpriteAffineAnim(&gSprites[spriteId]);
     StartSpriteAffineAnim(&gSprites[spriteId], 1);
@@ -1034,7 +1038,6 @@ static u8 InitObjectEventStateFromTemplate(struct ObjectEventTemplate *template,
     objectEvent->movementType = template->movementType;
     objectEvent->localId = template->localId;
     objectEvent->mapNum = mapNum;
-    objectEvent++; objectEvent--;
     objectEvent->mapGroup = mapGroup;
     objectEvent->initialCoords.x = x;
     objectEvent->initialCoords.y = y;
@@ -1047,13 +1050,11 @@ static u8 InitObjectEventStateFromTemplate(struct ObjectEventTemplate *template,
     objectEvent->range.as_nybbles.x = template->movementRangeX;
     objectEvent->range.as_nybbles.y = template->movementRangeY;
     objectEvent->trainerType = template->trainerType;
+    objectEvent->mapNum = mapNum; //redundant, but needed to match
     objectEvent->trainerRange_berryTreeId = template->trainerRange_berryTreeId;
     objectEvent->previousMovementDirection = gInitialMovementTypeFacingDirections[template->movementType];
     SetObjectEventDirection(objectEvent, objectEvent->previousMovementDirection);
     SetObjectEventDynamicGraphicsId(objectEvent);
-#ifndef NONMATCHING
-    asm("":::"r5", "r6");
-#endif
     if (gRangedMovementTypes[objectEvent->movementType])
     {
         if (objectEvent->range.as_nybbles.x == 0)
@@ -1256,7 +1257,7 @@ u8 SpawnSpecialObjectEventParameterized(u8 graphicsId, u8 movementBehavior, u8 l
     y -= 7;
     objectEventTemplate.localId = localId;
     objectEventTemplate.graphicsId = graphicsId;
-    objectEventTemplate.unk2 = 0;
+    objectEventTemplate.inConnection = 0;
     objectEventTemplate.x = x;
     objectEventTemplate.y = y;
     objectEventTemplate.elevation = z;
@@ -1330,7 +1331,9 @@ u8 AddPseudoObjectEvent(u16 graphicsId, void (*callback)(struct Sprite *), s16 x
     return spriteId;
 }
 
-u8 sprite_new(u8 graphicsId, u8 a1, s16 x, s16 y, u8 z, u8 direction)
+// Used to create sprite object events instead of a full object event
+// Used when resources are limiting, e.g. for the audience in contests or group members in Union Room
+u8 CreateObjectSprite(u8 graphicsId, u8 a1, s16 x, s16 y, u8 z, u8 direction)
 {
     u8 spriteId;
     struct Sprite *sprite;
@@ -1339,11 +1342,11 @@ u8 sprite_new(u8 graphicsId, u8 a1, s16 x, s16 y, u8 z, u8 direction)
     const struct ObjectEventGraphicsInfo *graphicsInfo;
 
     graphicsInfo = GetObjectEventGraphicsInfo(graphicsId);
-    MakeObjectTemplateFromObjectEventGraphicsInfo(graphicsId, UpdateObjectEventSpriteSubpriorityAndVisibility, &spriteTemplate, &subspriteTables);
+    MakeObjectTemplateFromObjectEventGraphicsInfo(graphicsId, UpdateObjectEventSprite, &spriteTemplate, &subspriteTables);
     *(u16 *)&spriteTemplate.paletteTag = 0xFFFF;
     x += 7;
     y += 7;
-    sub_80930E0(&x, &y, 8, 16);
+    SetSpritePosToOffsetMapCoords(&x, &y, 8, 16);
     spriteId = CreateSpriteAtEnd(&spriteTemplate, x, y, 0);
     if (spriteId != MAX_SPRITES)
     {
@@ -1735,7 +1738,7 @@ void sub_808E7E4(u8 localId, u8 mapNum, u8 mapGroup)
     }
 }
 
-void sub_808E82C(u8 localId, u8 mapNum, u8 mapGroup, s16 x, s16 y)
+void SetObjectEventSpritePosByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroup, s16 x, s16 y)
 {
     u8 objectEventId;
     struct Sprite *sprite;
@@ -2095,7 +2098,13 @@ const u8 *GetObjectEventScriptPointerByObjectEventId(u8 objectEventId)
 
 static u16 GetObjectEventFlagIdByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroup)
 {
-    return GetObjectEventTemplateByLocalIdAndMap(localId, mapNum, mapGroup)->flagId;
+    struct ObjectEventTemplate *obj = GetObjectEventTemplateByLocalIdAndMap(localId, mapNum, mapGroup);
+#ifdef UBFIX
+    // BUG: The function may return NULL, and attempting to read from NULL may freeze the game using modern compilers.
+    if (obj == NULL)
+        return 0;
+#endif // UBFIX
+    return obj->flagId;
 }
 
 static u16 GetObjectEventFlagIdByObjectEventId(u8 objectEventId)
@@ -2121,7 +2130,8 @@ static u8 GetObjectTrainerTypeByObjectEventId(u8 objectEventId)
     return gObjectEvents[objectEventId].trainerType;
 }
 
-u8 sub_808F0D4(u8 localId, u8 mapNum, u8 mapGroup)
+// Unused
+u8 GetObjectEventBerryTreeIdByLocalIdAndMap(u8 localId, u8 mapNum, u8 mapGroup)
 {
     u8 objectEventId;
 
@@ -2132,7 +2142,7 @@ u8 sub_808F0D4(u8 localId, u8 mapNum, u8 mapGroup)
     return gObjectEvents[objectEventId].trainerRange_berryTreeId;
 }
 
-u8 ObjectEventGetBerryTreeId(u8 objectEventId)
+u8 GetObjectEventBerryTreeId(u8 objectEventId)
 {
     return gObjectEvents[objectEventId].trainerRange_berryTreeId;
 }
@@ -4588,22 +4598,22 @@ void SetSpritePosToMapCoords(s16 mapX, s16 mapY, s16 *destX, s16 *destY)
     s16 dx = -gTotalCameraPixelOffsetX - gFieldCamera.x;
     s16 dy = -gTotalCameraPixelOffsetY - gFieldCamera.y;
     if (gFieldCamera.x > 0)
-        dx += 1 << 4;
+        dx += 16;
 
     if (gFieldCamera.x < 0)
-        dx -= 1 << 4;
+        dx -= 16;
 
     if (gFieldCamera.y > 0)
-        dy += 1 << 4;
+        dy += 16;
 
     if (gFieldCamera.y < 0)
-        dy -= 1 << 4;
+        dy -= 16;
 
     *destX = ((mapX - gSaveBlock1Ptr->pos.x) << 4) + dx;
     *destY = ((mapY - gSaveBlock1Ptr->pos.y) << 4) + dy;
 }
 
-void sub_80930E0(s16 *x, s16 *y, s16 dx, s16 dy)
+void SetSpritePosToOffsetMapCoords(s16 *x, s16 *y, s16 dx, s16 dy)
 {
     SetSpritePosToMapCoords(*x, *y, x, y);
     *x += dx;
@@ -6588,15 +6598,15 @@ bool8 MovementAction_UnusedAcroActionRight_Step0(struct ObjectEvent *objectEvent
     return FALSE;
 }
 
-void sub_8095AF0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
+void InitFigure8Anim(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8097750(sprite);
+    InitSpriteForFigure8Anim(sprite);
     sprite->animPaused = FALSE;
 }
 
-bool8 sub_8095B0C(struct ObjectEvent *objectEvent, struct Sprite *sprite)
+bool8 DoFigure8Anim(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    if (sub_8097758(sprite))
+    if (AnimateSpriteInFigure8(sprite))
     {
         ShiftStillObjectEventCoords(objectEvent);
         objectEvent->triggerGroundEffectsOnStop = TRUE;
@@ -6608,14 +6618,14 @@ bool8 sub_8095B0C(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 
 bool8 MovementAction_Figure8_Step0(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    sub_8095AF0(objectEvent, sprite);
+    InitFigure8Anim(objectEvent, sprite);
     sprite->data[2] = 1;
     return MovementAction_Figure8_Step1(objectEvent, sprite);
 }
 
 bool8 MovementAction_Figure8_Step1(struct ObjectEvent *objectEvent, struct Sprite *sprite)
 {
-    if (sub_8095B0C(objectEvent, sprite))
+    if (DoFigure8Anim(objectEvent, sprite))
     {
         sprite->data[2] = 2;
         return TRUE;
@@ -7818,33 +7828,33 @@ void GroundEffect_Seaweed(struct ObjectEvent *objEvent, struct Sprite *sprite)
 }
 
 static void (*const sGroundEffectFuncs[])(struct ObjectEvent *objEvent, struct Sprite *sprite) = {
-    GroundEffect_SpawnOnTallGrass,
-    GroundEffect_StepOnTallGrass,
-    GroundEffect_SpawnOnLongGrass,
-    GroundEffect_StepOnLongGrass,
-    GroundEffect_WaterReflection,
-    GroundEffect_IceReflection,
-    GroundEffect_FlowingWater,
-    GroundEffect_SandTracks,
-    GroundEffect_DeepSandTracks,
-    GroundEffect_Ripple,
-    GroundEffect_StepOnPuddle,
-    GroundEffect_SandHeap,
-    GroundEffect_JumpOnTallGrass,
-    GroundEffect_JumpOnLongGrass,
-    GroundEffect_JumpOnShallowWater,
-    GroundEffect_JumpOnWater,
-    GroundEffect_JumpLandingDust,
-    GroundEffect_ShortGrass,
-    GroundEffect_HotSprings,
-    GroundEffect_Seaweed
+    GroundEffect_SpawnOnTallGrass,      // GROUND_EFFECT_FLAG_TALL_GRASS_ON_SPAWN
+    GroundEffect_StepOnTallGrass,       // GROUND_EFFECT_FLAG_TALL_GRASS_ON_MOVE
+    GroundEffect_SpawnOnLongGrass,      // GROUND_EFFECT_FLAG_LONG_GRASS_ON_SPAWN
+    GroundEffect_StepOnLongGrass,       // GROUND_EFFECT_FLAG_LONG_GRASS_ON_MOVE
+    GroundEffect_WaterReflection,       // GROUND_EFFECT_FLAG_ICE_REFLECTION
+    GroundEffect_IceReflection,         // GROUND_EFFECT_FLAG_REFLECTION
+    GroundEffect_FlowingWater,          // GROUND_EFFECT_FLAG_SHALLOW_FLOWING_WATER
+    GroundEffect_SandTracks,            // GROUND_EFFECT_FLAG_SAND
+    GroundEffect_DeepSandTracks,        // GROUND_EFFECT_FLAG_DEEP_SAND
+    GroundEffect_Ripple,                // GROUND_EFFECT_FLAG_RIPPLES
+    GroundEffect_StepOnPuddle,          // GROUND_EFFECT_FLAG_PUDDLE
+    GroundEffect_SandHeap,              // GROUND_EFFECT_FLAG_SAND_PILE
+    GroundEffect_JumpOnTallGrass,       // GROUND_EFFECT_FLAG_LAND_IN_TALL_GRASS
+    GroundEffect_JumpOnLongGrass,       // GROUND_EFFECT_FLAG_LAND_IN_LONG_GRASS
+    GroundEffect_JumpOnShallowWater,    // GROUND_EFFECT_FLAG_LAND_IN_SHALLOW_WATER
+    GroundEffect_JumpOnWater,           // GROUND_EFFECT_FLAG_LAND_IN_DEEP_WATER
+    GroundEffect_JumpLandingDust,       // GROUND_EFFECT_FLAG_LAND_ON_NORMAL_GROUND
+    GroundEffect_ShortGrass,            // GROUND_EFFECT_FLAG_SHORT_GRASS
+    GroundEffect_HotSprings,            // GROUND_EFFECT_FLAG_HOT_SPRINGS
+    GroundEffect_Seaweed                // GROUND_EFFECT_FLAG_SEAWEED
 };
 
 static void DoFlaggedGroundEffects(struct ObjectEvent *objEvent, struct Sprite *sprite, u32 flags)
 {
     u8 i;
 
-    if (ObjectEventIsFarawayIslandMew(objEvent) == TRUE && !sub_81D4A58(objEvent))
+    if (ObjectEventIsFarawayIslandMew(objEvent) == TRUE && !ShouldMewShakeGrass(objEvent))
         return;
 
     for (i = 0; i < ARRAY_COUNT(sGroundEffectFuncs); i++, flags >>= 1)
@@ -8115,7 +8125,7 @@ bool8 sub_80976EC(struct Sprite *sprite)
         return FALSE;
 }
 
-static const s8 gUnknown_0850E772[] = {
+static const s8 sFigure8XOffsets[FIGURE_8_LENGTH] = {
     1, 2, 2, 2, 2, 2, 2, 2,
     2, 2, 2, 1, 2, 2, 1, 2,
     2, 1, 2, 2, 1, 2, 1, 1,
@@ -8127,7 +8137,7 @@ static const s8 gUnknown_0850E772[] = {
     0, 1, 0, 0, 0, 0, 0, 0,
 };
 
-static const s8 gUnknown_0850E7BA[] = {
+static const s8 sFigure8YOffsets[FIGURE_8_LENGTH] = {
      0,  0,  1,  0,  0,  1,  0,  0,
      1,  0,  1,  1,  0,  1,  1,  0,
      1,  1,  0,  1,  1,  0,  1,  1,
@@ -8139,57 +8149,57 @@ static const s8 gUnknown_0850E7BA[] = {
     -1, -1, -1, -1, -1, -1, -1, -2,
 };
 
-s16 sub_8097728(s16 a1)
+s16 GetFigure8YOffset(s16 idx)
 {
-    return gUnknown_0850E7BA[a1];
+    return sFigure8YOffsets[idx];
 }
 
-s16 sub_809773C(s16 a1)
+s16 GetFigure8XOffset(s16 idx)
 {
-    return gUnknown_0850E772[a1];
+    return sFigure8XOffsets[idx];
 }
 
-void sub_8097750(struct Sprite *sprite)
+static void InitSpriteForFigure8Anim(struct Sprite *sprite)
 {
     sprite->data[6] = 0;
     sprite->data[7] = 0;
 }
 
-bool8 sub_8097758(struct Sprite *sprite)
+static bool8 AnimateSpriteInFigure8(struct Sprite *sprite)
 {
-    bool8 result = FALSE;
+    bool8 finished = FALSE;
 
     switch(sprite->data[7])
     {
-        case 0:
-            sprite->pos2.x += sub_809773C(sprite->data[6]);
-            sprite->pos2.y += sub_8097728(sprite->data[6]);
-            break;
-        case 1:
-            sprite->pos2.x -= sub_809773C(0x47 - sprite->data[6]);
-            sprite->pos2.y += sub_8097728(0x47 - sprite->data[6]);
-            break;
-        case 2:
-            sprite->pos2.x -= sub_809773C(sprite->data[6]);
-            sprite->pos2.y += sub_8097728(sprite->data[6]);
-            break;
-        case 3:
-            sprite->pos2.x += sub_809773C(0x47 - sprite->data[6]);
-            sprite->pos2.y += sub_8097728(0x47 - sprite->data[6]);
-            break;
+    case 0:
+        sprite->pos2.x += GetFigure8XOffset(sprite->data[6]);
+        sprite->pos2.y += GetFigure8YOffset(sprite->data[6]);
+        break;
+    case 1:
+        sprite->pos2.x -= GetFigure8XOffset((FIGURE_8_LENGTH - 1) - sprite->data[6]);
+        sprite->pos2.y += GetFigure8YOffset((FIGURE_8_LENGTH - 1) - sprite->data[6]);
+        break;
+    case 2:
+        sprite->pos2.x -= GetFigure8XOffset(sprite->data[6]);
+        sprite->pos2.y += GetFigure8YOffset(sprite->data[6]);
+        break;
+    case 3:
+        sprite->pos2.x += GetFigure8XOffset((FIGURE_8_LENGTH - 1) - sprite->data[6]);
+        sprite->pos2.y += GetFigure8YOffset((FIGURE_8_LENGTH - 1) - sprite->data[6]);
+        break;
     }
-    if(++sprite->data[6] == 0x48)
+    if (++sprite->data[6] == FIGURE_8_LENGTH)
     {
         sprite->data[6] = 0;
         sprite->data[7]++;
     }
-    if(sprite->data[7] == 0x4)
+    if (sprite->data[7] == 4)
     {
         sprite->pos2.y = 0;
         sprite->pos2.x = 0;
-        result = TRUE;
+        finished = TRUE;
     }
-    return result;
+    return finished;
 }
 
 static const s8 gUnknown_0850E802[] = {
@@ -8354,51 +8364,56 @@ void UpdateObjectEventSpriteVisibility(struct Sprite *sprite, bool8 invisible)
         sprite->invisible = TRUE;
 }
 
-static void UpdateObjectEventSpriteSubpriorityAndVisibility(struct Sprite *sprite)
+#define tInvisible     data[2]
+#define tAnimNum       data[3]
+#define tAnimState     data[4]
+
+static void UpdateObjectEventSprite(struct Sprite *sprite)
 {
-    sub_8097D68(sprite);
+    UpdateObjectEventSpritePosition(sprite);
     SetObjectSubpriorityByZCoord(sprite->data[1], sprite, 1);
-    UpdateObjectEventSpriteVisibility(sprite, sprite->data[2]);
+    UpdateObjectEventSpriteVisibility(sprite, sprite->tInvisible);
 }
 
-void sub_8097AF0(void)
+// Unused
+static void DestroyObjectEventSprites(void)
 {
     int i;
 
-    for(i = 0; i < MAX_SPRITES; i++)
+    for (i = 0; i < MAX_SPRITES; i++)
     {
         struct Sprite *sprite = &gSprites[i];
-        if(sprite->inUse && sprite->callback == UpdateObjectEventSpriteSubpriorityAndVisibility)
+        if(sprite->inUse && sprite->callback == UpdateObjectEventSprite)
             DestroySprite(sprite);
     }
 }
 
-int sub_8097B2C(u8 var) // this should return a u8, because all that call this shifts to u8, but it wont match because it doesnt shift u8 at the end.
+static int GetObjectEventSpriteId(u8 var) // this should return a u8, because all that call this shifts to u8, but it wont match because it doesnt shift u8 at the end.
 {
     int i;
 
-    for(i = 0; i < MAX_SPRITES; i++)
+    for (i = 0; i < MAX_SPRITES; i++)
     {
         struct Sprite *sprite = &gSprites[i];
-        if(sprite->inUse && sprite->callback == UpdateObjectEventSpriteSubpriorityAndVisibility && (u8)sprite->data[0] == var)
+        if(sprite->inUse && sprite->callback == UpdateObjectEventSprite && (u8)sprite->data[0] == var)
             return i;
     }
     return MAX_SPRITES;
 }
 
-void sub_8097B78(u8 var1, u8 var2)
+void TurnObjectEventSprite(u8 objectEventId, u8 direction)
 {
-    u8 spriteId = sub_8097B2C(var1);
+    u8 spriteId = GetObjectEventSpriteId(objectEventId);
 
-    if(spriteId != MAX_SPRITES)
-        StartSpriteAnim(&gSprites[spriteId], GetFaceDirectionAnimNum(var2));
+    if (spriteId != MAX_SPRITES)
+        StartSpriteAnim(&gSprites[spriteId], GetFaceDirectionAnimNum(direction));
 }
 
-void sub_8097BB4(u8 var1, u8 graphicsId)
+void SetObjectEventSpriteGraphics(u8 objectEventId, u8 graphicsId)
 {
-    int spriteId = sub_8097B2C(var1);
+    int spriteId = GetObjectEventSpriteId(objectEventId);
 
-    if(spriteId != MAX_SPRITES)
+    if (spriteId != MAX_SPRITES)
     {
         struct Sprite *sprite = &gSprites[spriteId];
         const struct ObjectEventGraphicsInfo *graphicsInfo = GetObjectEventGraphicsInfo(graphicsId);
@@ -8409,7 +8424,7 @@ void sub_8097BB4(u8 var1, u8 graphicsId)
         sprite->oam.paletteNum = graphicsInfo->paletteSlot;
         sprite->images = graphicsInfo->images;
 
-        if(graphicsInfo->subspriteTables == NULL)
+        if (graphicsInfo->subspriteTables == NULL)
         {
             sprite->subspriteTables = NULL;
             sprite->subspriteTableNum = 0;
@@ -8424,102 +8439,102 @@ void sub_8097BB4(u8 var1, u8 graphicsId)
     }
 }
 
-void sub_8097C44(u8 var, bool32 var2)
+void SetObjectEventSpriteInvisibility(u8 objectEventId, bool32 invisible)
 {
-    u8 spriteId = sub_8097B2C(var);
+    u8 spriteId = GetObjectEventSpriteId(objectEventId);
 
-    if(spriteId == MAX_SPRITES)
+    if (spriteId == MAX_SPRITES)
         return;
 
-    if(var2)
-        gSprites[spriteId].data[2] = 1;
+    if (invisible)
+        gSprites[spriteId].tInvisible = TRUE;
     else
-        gSprites[spriteId].data[2] = 0;
+        gSprites[spriteId].tInvisible = FALSE;
 }
 
-bool32 sub_8097C8C(u8 var)
+bool32 IsObjectEventSpriteInvisible(u8 objectEventId)
 {
-    u8 spriteId = sub_8097B2C(var);
+    u8 spriteId = GetObjectEventSpriteId(objectEventId);
 
-    if(spriteId == MAX_SPRITES)
+    if (spriteId == MAX_SPRITES)
         return FALSE;
 
-    return (gSprites[spriteId].data[2] == TRUE);
+    return (gSprites[spriteId].tInvisible == TRUE);
 }
 
-void sub_8097CC4(u8 var1, u8 var2)
+void SetObjectEventSpriteAnim(u8 objectEventId, u8 animNum)
 {
-    u8 spriteId = sub_8097B2C(var1);
+    u8 spriteId = GetObjectEventSpriteId(objectEventId);
 
-    if(spriteId != MAX_SPRITES)
+    if (spriteId != MAX_SPRITES)
     {
-        gSprites[spriteId].data[3] = var2;
-        gSprites[spriteId].data[4] = 0;
+        gSprites[spriteId].tAnimNum = animNum;
+        gSprites[spriteId].tAnimState = 0;
     }
 }
 
-void sub_8097CF4(struct Sprite *sprite)
+static void MoveUnionRoomObjectUp(struct Sprite *sprite)
 {
-    switch(sprite->data[4])
+    switch(sprite->tAnimState)
     {
         case 0:
             sprite->pos2.y = 0;
-            sprite->data[4]++;
+            sprite->tAnimState++;
         case 1:
             sprite->pos2.y -= 8;
-            if(sprite->pos2.y == -160)
+            if (sprite->pos2.y == -160)
             {
                 sprite->pos2.y = 0;
-                sprite->data[2] = 1;
-                sprite->data[3] = 0;
-                sprite->data[4] = 0;
+                sprite->tInvisible = TRUE;
+                sprite->tAnimNum = 0;
+                sprite->tAnimState = 0;
             }
     }
 }
 
-void sub_8097D30(struct Sprite *sprite)
+static void MoveUnionRoomObjectDown(struct Sprite *sprite)
 {
-    switch(sprite->data[4])
+    switch(sprite->tAnimState)
     {
         case 0:
             sprite->pos2.y = -160;
-            sprite->data[4]++;
+            sprite->tAnimState++;
         case 1:
             sprite->pos2.y += 8;
             if(sprite->pos2.y == 0)
             {
-                sprite->data[3] = 0;
-                sprite->data[4] = 0;
+                sprite->tAnimNum = 0;
+                sprite->tAnimState = 0;
             }
     }
 }
 
-static void sub_8097D68(struct Sprite *sprite)
+static void UpdateObjectEventSpritePosition(struct Sprite *sprite)
 {
-    switch(sprite->data[3])
+    switch(sprite->tAnimNum)
     {
-        case 1:
-            sub_8097D30(sprite);
+        case UNION_ROOM_SPAWN_IN:
+            MoveUnionRoomObjectDown(sprite);
             break;
-        case 2:
-            sub_8097CF4(sprite);
+        case UNION_ROOM_SPAWN_OUT:
+            MoveUnionRoomObjectUp(sprite);
             break;
         case 0:
             break;
         default:
-            sprite->data[3] = 0;
+            sprite->tAnimNum = 0;
             break;
     }
 }
 
-bool32 sub_8097D9C(u8 var)
+bool32 IsObjectEventSpriteAnimating(u8 var)
 {
-    u8 spriteId = sub_8097B2C(var);
+    u8 spriteId = GetObjectEventSpriteId(var);
 
-    if(spriteId == MAX_SPRITES)
+    if (spriteId == MAX_SPRITES)
         return FALSE;
 
-    if(gSprites[spriteId].data[3] != FALSE)
+    if (gSprites[spriteId].tAnimNum != 0)
         return TRUE;
 
     return FALSE;
@@ -8665,7 +8680,7 @@ void CreateLevitateMovementTask(struct ObjectEvent *objectEvent)
     u8 taskId = CreateTask(ApplyLevitateMovement, 0xFF);
     struct Task *task = &gTasks[taskId];
 
-    StoreWordInTwoHalfwords(&task->data[0], (u32)objectEvent);
+    StoreWordInTwoHalfwords((u16 *)&task->data[0], (u32)objectEvent);
     objectEvent->warpArrowSpriteId = taskId;
     task->data[3] = 0xFFFF;
 }
@@ -8676,7 +8691,7 @@ static void ApplyLevitateMovement(u8 taskId)
     struct Sprite *sprite;
     struct Task *task = &gTasks[taskId];
 
-    LoadWordFromTwoHalfwords(&task->data[0], (u32 *)&objectEvent); // load the map object pointer.
+    LoadWordFromTwoHalfwords((u16 *)&task->data[0], (u32 *)&objectEvent); // load the map object pointer.
     sprite = &gSprites[objectEvent->spriteId];
 
     if(!(task->data[2] & 0x3))
@@ -8693,7 +8708,7 @@ void DestroyExtraMovementTask(u8 taskId)
     struct ObjectEvent *objectEvent;
     struct Task *task = &gTasks[taskId];
 
-    LoadWordFromTwoHalfwords(&task->data[0], (u32 *)&objectEvent); // unused objectEvent
+    LoadWordFromTwoHalfwords((u16 *)&task->data[0], (u32 *)&objectEvent); // unused objectEvent
     DestroyTask(taskId);
 }
 
