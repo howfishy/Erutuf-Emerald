@@ -1350,7 +1350,7 @@ static void BuyMenuSubtractCoins(u8 taskId)
     struct Task *task = &gTasks[taskId];
     
     RemoveCoins(gShopDataPtr->totalCost);
-    PlaySE(SE_REGI);
+    PlaySE(SE_SHOP);
     PrintCoinsAmount(0, 56, 1, GetCoins());
     task->func = Task_ReturnToItemListAfterItemPurchase;
 }
