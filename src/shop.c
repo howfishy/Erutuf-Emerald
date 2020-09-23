@@ -1061,7 +1061,7 @@ static void Task_BuyHowManyDialogueHandleInput(u8 taskId)
     }
     else
     {
-        if (gMain.newKeys & A_BUTTON)
+        if (JOY_NEW(A_BUTTON))
         {
             PlaySE(SE_SELECT);
             ClearStdWindowAndFrameToTransparent(4, 0);
@@ -1083,7 +1083,7 @@ static void Task_BuyHowManyDialogueHandleInput(u8 taskId)
                 BuyMenuDisplayMessage(taskId, gText_Var1AndYouWantedVar2, BuyMenuConfirmPurchase);
             }
         }
-        else if (gMain.newKeys & B_BUTTON)
+        else if (JOY_NEW(B_BUTTON))
         {
             PlaySE(SE_SELECT);
             ClearStdWindowAndFrameToTransparent(4, 0);
@@ -1154,7 +1154,7 @@ static void BuyMenuSubtractMoney(u8 taskId)
 {
     IncrementGameStat(GAME_STAT_SHOPPED);
     RemoveMoney(&gSaveBlock1Ptr->money, gShopDataPtr->totalCost);
-    PlaySE(SE_REGI);
+    PlaySE(SE_SHOP);
     PrintMoneyAmountInMoneyBox(0, GetMoney(&gSaveBlock1Ptr->money), 0);
 
     if (gMartInfo.martType == MART_TYPE_NORMAL)
@@ -1171,7 +1171,7 @@ static void Task_ReturnToItemListAfterItemPurchase(u8 taskId)
 {
     s16 *data = gTasks[taskId].data;
 
-    if (gMain.newKeys & (A_BUTTON | B_BUTTON))
+    if (JOY_NEW(A_BUTTON | B_BUTTON))
     {
         PlaySE(SE_SELECT);
         if (tItemId == ITEM_POKE_BALL && tItemCount > 9 && AddBagItem(ITEM_PREMIER_BALL, 1) == TRUE)
@@ -1187,7 +1187,7 @@ static void Task_ReturnToItemListAfterItemPurchase(u8 taskId)
 
 static void Task_ReturnToItemListAfterDecorationPurchase(u8 taskId)
 {
-    if (gMain.newKeys & (A_BUTTON | B_BUTTON))
+    if (JOY_NEW(A_BUTTON | B_BUTTON))
     {
         PlaySE(SE_SELECT);
         BuyMenuReturnToItemList(taskId);
